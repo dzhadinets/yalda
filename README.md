@@ -1,13 +1,15 @@
 # Yet Another Linux Development Approach
 
-The main thing that YALDA does is automatically prepare environment for development of specific kernel
-(version, toolchain, architecture, and config of the kernel) with ability to launch it and debug at runtime.
+The main thing that YALDA does is automatically prepare an environment for development of specific kernel
+(version, toolchain, architecture, and config of the kernel) with ability to launch it and debug the kernel
+in the real time.
 
 ## Motivation
-When you are during brand new board bring-up it is usually required to develop or tune Linux kernel modules.
-The main issue is that to debug it on a remote environment is that you have to setup specific set of hardware
-and software tools. The second point is when you are developing user interface of the module you even do not
-need a hardware but specific architecture, toolchain, version of the kernel etc.
+When you are in a brand new board bring-up it is usually required to develop or tune Linux kernel modules.
+The main issue is that to debug it on a remote environment it is required to setup specific set of hardware
+and software tools. The second point is when you are developing public user interface of the module you even do not
+need a hardware but specific architecture, toolchain, version of the kernel etc. YALDA helps to setup all inclsive 
+virtual environment where you can have a fun for the developing but not a configuration
 
 ## Prepare environment
 YALDA checks all required dependencies basing on the configuration of your build. YALDA utilizes KConfig approach
@@ -65,6 +67,8 @@ Hope the structure and internal help of menu items are self explaining. Just cal
 ```bash
 $ yalda config
 ```
+![RICS-V configuration](images/config.gif "YALDA configuration")
+
 Finally it creates .yalda directory and generates config file there with is used to get and build all sources and prepares environment.
 In order to configure YALDA globally call configuration inside YALDA's sources directory. The calling of the configuration in
 other places will create a local project config and an environment.
@@ -87,6 +91,8 @@ Then components can use local path for the sources. Do synchronization  manually
 Ie for YOCTO it is enough convenient to get and track sources using `devtool` but develop them using YALDA
 
 ## Toolchain
+Toolchain can be used for components compillation. Make sure you set correct crosscompillation prefix
+In case of BOOTLIN's toolchain the system gets latest stable version with glibc basing on the selected achitecture
 
 ## Build components
 To build everything
@@ -158,7 +164,7 @@ Useful things:
 - in order to exit from QEMU use ctrl-a-x
 
 ## Known issues
-- ctrl-c does not work in ash scripts
+- shutdown does not halt qemu. use ctrl-a-x
+- Dependencies are not checked correctly and it leads to errors. will be reimplemented
 - host kernel usage is unusable for now
-
 

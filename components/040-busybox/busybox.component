@@ -37,7 +37,7 @@ function do_build
     if [ "$CONFIG_YALDA_BUILD_BUSYBOX" == "y" ]; then
         pushd "$YALDA_BUSYBOX_SOURCE_DIR" >/dev/null
         local kernel_version="$(make -s kernelversion)"
-        log_info "Kernel version $kernel_version"
+        log_info "Busybox version $kernel_version"
         if [ $# -eq 0 ];then
             if [ ! -r "$YALDA_BUSYBOX_BUILD_DIR/.config" ];then
                 if [ "$CONFIG_YALDA_BUSYBOX_PATCH" == "y" ]; then
