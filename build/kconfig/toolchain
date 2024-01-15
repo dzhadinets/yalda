@@ -1,0 +1,44 @@
+menu "Toolchain"
+
+config YALDA_USE_TOOLCHAIN
+  bool "Use custom toolchain"
+  default n
+  help
+    to get and build the compiller or not. If not then make sure that host prepared properly
+
+if YALDA_USE_TOOLCHAIN
+choice
+  prompt "Source"
+  default YALDA_TOOLCHAIN_FROM_DIR
+  help
+    Source of gcc tree (url | dir | bootlin)
+
+config YALDA_TOOLCHAIN_FROM_URL
+  bool "url"
+
+config YALDA_TOOLCHAIN_FROM_BOOTLIN
+  bool "bootlin"
+  depends on ! YALDA_ARCH_HOST
+  help
+    At the moment do not support bootlin when the ARCH is host
+
+config YALDA_TOOLCHAIN_FROM_DIR
+  bool "dir"
+  help
+    The system will expect toolchain in YALDA_TOOLCHAIN_DIR
+endchoice
+
+config YALDA_TOOLCHAIN_URL
+  string "Toolchain URL"
+  depends on YALDA_TOOLCHAIN_FROM_URL
+
+config YALDA_TOOLCHAIN_DIR
+  string "Toolchain workdir"
+  default "build/toolchain" if ! YALDA_TOOLCHAIN_FROM_DIR
+
+config YALDA_TOOLCHAIN_CROSS_PREFIX
+  string "Toolchain crosscompillaton prefix"
+
+endif #YALDA_BUILD_TOOLCHAIN
+
+endmenu

@@ -1,0 +1,22 @@
+# for tui mode it disables annoing paging
+set pagination off
+
+# connect to YALDA
+target remote ${REMOTE_TARGET}
+
+# Do not require continue key when screen is filled with logs
+set pagination off
+
+# in most cases we need to debug single thread
+set scheduler-locking on
+
+# adds temporary breakpoint on module init/exit functions
+b do_init_module
+commands
+silent
+    lx-symbols ${THIS_DIR}
+    tb *mod->init
+    tb *mod->exit
+    c
+end
+c

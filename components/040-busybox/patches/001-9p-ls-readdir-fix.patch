@@ -1,0 +1,44 @@
+diff --git a/coreutils/ls.c b/coreutils/ls.c
+index b69b804..0ac00bf 100644
+--- a/coreutils/ls.c
++++ b/coreutils/ls.c
+@@ -924,7 +924,7 @@ static void sort_and_display_files(struct dnode **dn, unsigned nfiles)
+ static struct dnode **scan_one_dir(const char *path, unsigned *nfiles_p)
+ {
+ 	struct dnode *dn, *cur, **dnp;
+-	struct dirent *entry;
++	struct dirent64 *entry;
+ 	DIR *dir;
+ 	unsigned i, nfiles;
+ 
+@@ -936,7 +936,7 @@ static struct dnode **scan_one_dir(const char *path, unsigned *nfiles_p)
+ 	}
+ 	dn = NULL;
+ 	nfiles = 0;
+-	while ((entry = readdir(dir)) != NULL) {
++	while ((entry = readdir64(dir)) != NULL) {
+ 		char *fullname;
+ 
+ 		/* are we going to list the file- it may be . or .. or a hidden file */
+diff --git a/libbb/lineedit.c b/libbb/lineedit.c
+index d6b2e76..e8cc013 100644
+--- a/libbb/lineedit.c
++++ b/libbb/lineedit.c
+@@ -889,7 +889,7 @@ static NOINLINE unsigned complete_cmd_dir_file(const char *command, int type)
+ 
+ 	for (i = 0; i < npaths; i++) {
+ 		DIR *dir;
+-		struct dirent *next;
++		struct dirent64 *next;
+ 		struct stat st;
+ 		char *found;
+ 		const char *lpath;
+@@ -907,7 +907,7 @@ static NOINLINE unsigned complete_cmd_dir_file(const char *command, int type)
+ 		if (!dir)
+ 			continue; /* don't print an error */
+ 
+-		while ((next = readdir(dir)) != NULL) {
++		while ((next = readdir64(dir)) != NULL) {
+ 			unsigned len;
+ 			const char *name_found = next->d_name;
+ 

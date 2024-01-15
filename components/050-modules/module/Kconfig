@@ -1,0 +1,44 @@
+comment "My debug module"
+
+menuconfig MYDEBUG_MODULE
+	tristate "Sample module to debug"
+	default y
+	help
+	  Help of module to debug
+
+if MYDEBUG_MODULE
+
+config MYDEBUG_MODULE_PARAM
+	bool "Use module params"
+	help
+	  Use module params for param
+
+	  If you are not sure, say Y here.
+
+choice
+	prompt "Hardcoded value"
+	default MYDEBUG_MODULE_PARAM_ZERO
+	depends on !MYDEBUG_MODULE_PARAM
+	help
+	  Hardcoded value of the parameter
+	config MYDEBUG_MODULE_PARAM_ZERO
+	  bool "0"
+	config MYDEBUG_MODULE_PARAM_VAL
+	  bool "100500"
+endchoice
+
+config MYDEBUG_MODULE_PARAM_VALUE
+	depends on !MYDEBUG_MODULE_PARAM
+	int
+	default 0 if MYDEBUG_MODULE_PARAM_ZERO
+	default 100500 if MYDEBUG_MODULE_PARAM_VAL
+
+config MYDEBUG_MODULE_CONFIGURATION
+	bool "Configurable"
+	default y
+	help
+	  Uses sysfs to control the modue runtime
+
+	  If you are not sure, say N here.
+
+endif

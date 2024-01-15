@@ -1,0 +1,40 @@
+#############################################
+#Types: lib, app, cmd
+#Libraries are checked with `pkg-check`
+#Applications with `which`
+#Commands are performed with redirecting to /dev/null and return status is checked
+# Type	Arches		Dependency					Installer
+#            Source patcher
+app	all		quilt						quilt
+#            linux headers for host build
+cmd	host		[ -d "/lib/modules/$(uname -r)/build" ]		sudo apt install linux-tools-common
+#            YALDA configurator GUI frontend
+lib	all		ncurses						libncurses-dev
+#            
+#lib	all		libssl						libssl-dev
+#            Needed to build kernel
+lib	all		libelf						libelf-dev
+#            Library dependencies checker
+app	all		pkg-config					pkg-config
+#            Package downloader
+app	all		wget						wget
+#            source controll downloader
+app	all		git						git
+#            YALDA configurator
+app	all		kconfig-mconf					kconfig-frontends
+#            Package unpacker
+app	all		xz						xz-utils
+#            
+app	all		bc						bc
+#            
+app	all		flex						flex
+#            
+app	all		bison						bison
+#            Launcher
+app	x86|x86_64|host	qemu-system-x86_64				qemu-system-x86
+app	arm		qemu-system-arm					qemu-system-arm
+app	arm		qemu-system-aarch64				qemu-system-aarch64
+#            Compilers
+app	host		gcc						build-essential binutils-multiarch
+app	arm		arm-linux-gnueabi-gcc				gcc-arm-linux-gnu libc-dev-armel-cross libc6-dev-armel-cross
+app	arm64		aarch64-linux-gnu-gcc				gcc-aarch64-linux-gnu linux-libc-dev-arm64-cross libc6-dev-arm64-cross

@@ -1,0 +1,4 @@
+# Patch enables debug symbols in .init* sections of kernel modules
+kernel_scripts_gdb.patch
+# ARM: vfp: force non-conditional encoding for external Thumb2 tail call
+arm_Thumb2.patch

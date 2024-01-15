@@ -1,0 +1,48 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+CONFIG_YALDA_GDB_FROM_IDE=y
+
+function do_sync
+{
+    return
+}
+
+function do_build
+{
+    return
+}
+
+function gdb_launch
+{
+    if [ "$CONFIG_YALDA_FROM_HOST" == "y" ];then
+        log_error "Host kernel debug is not implemented yet"
+    else
+        if [ "$1" == "--launch" ];then
+            local REMOTE_TARGET=" | exec sq-yalda --silent run qemu --gdb stdio"
+            export THIS_DIR REMOTE_TARGET
+            envsubst < "$YALDA_ROOT_DIR/components/gdb/gdbinit_S.template"> "$YALDA_WORKDIR/gdbinit"
+            trap "rm -f \"$YALDA_WORKDIR/gdbinit\"" EXIT
+        else
+            [ -f "$YALDA_WORKDIR/gdbinit" ] || log_error "Launch YALDA first"
+        fi
+
+        gdb_param="${YALDA_KERNEL_BUILD_DIR}/vmlinux"
+        gdb_param+=" -iex 'set auto-load safe-path .'"
+        gdb_param+=" -x ${YALDA_WORKDIR}/gdbinit"
+        if [ "$CONFIG_YALDA_GDB_FROM_IDE" == "y" ]; then
+            gdb_param+=" -i=mi2"
+        fi
+        log_info $gdb_param
+        gdb-multiarch $gdb_param
+    fi
+}
+
+function do_clean
+{
+    return
+}

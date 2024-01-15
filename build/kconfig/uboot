@@ -1,0 +1,59 @@
+menu "U-boot"
+
+config YALDA_BUILD_UBOOT
+  bool "Build bootloader"
+  default n
+  help
+    Build U-boot or not
+
+if YALDA_BUILD_UBOOT
+
+choice
+  prompt "Source"
+  default YALDA_UBOOT_FROM_GIT
+  help
+    Source of U-boot tree (git | dir | url)
+
+config YALDA_UBOOT_FROM_URL
+  bool "url"
+  help
+    The system will download sources from archive
+
+config YALDA_UBOOT_FROM_GIT
+  bool "git"
+  help
+    The system will download sources from git
+
+config YALDA_UBOOT_FROM_DIR
+  bool "dir"
+  help
+    The system will expect sources in YALDA_UBOOT_SOURCE_DIR
+endchoice
+
+config YALDA_UBOOT_SOURCE_DIR
+  string "Source dir"
+  default "uboot"
+  help
+    Path to U-boot source tree
+
+config YALDA_UBOOT_BUILD_DIR
+  string "Build workdir"
+  default "build/uboot"
+
+config YALDA_UBOOT_VERSION
+  string "Version"
+  depends on YALDA_UBOOT_FROM_GIT || YALDA_UBOOT_FROM_URL
+  default "default" if YALDA_UBOOT_FROM_GIT
+  default "v2023.01" if YALDA_BUSYBOX_FROM_URL
+  help
+    Required busybox version (default | <version>)
+
+config YALDA_UBOOT_PATCH
+  bool "Apply YALDA patches"
+  default y
+  help
+    Apply YALDA's U-boot patches
+
+endif #YALDA_BUILD_UBOOT
+
+endmenu

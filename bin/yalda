@@ -1,0 +1,332 @@
+#!/bin/bash
+
+set -e
+
+########################################### help case
+function call_help
+{
+    # Commands and parameters list are used by bash completition
+    # See ../scripts/completion.bash for more info
+    echo "Usage: $(basename $0) [COMMAND] ..."
+    echo "Common launching arguments:"
+    echo "  -h|--help                          	- gets this help"
+    echo "  -s|--silent                        	- do not print YALDA logs except errors"
+    echo "  -V|--verbose                       	- print verbosed commands output"
+    echo "  -c|--cpu=<AMOUNT>                  	- limit cpus"
+    echo "The following are valid commands:"
+    echo "  sync  [<components>]               	- sync sources and check it is up to date"
+    echo "  build [<components>|<build_params>]	- build curent dir for YALDA"
+    echo "  config [<components>]              	- without params runs YALDA configuration"
+    echo "  run <run_params>                   	- launch YALDA"
+    echo "  clean [<components>|<build_params>]	- clean YALDA in the curent dir"
+    echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
+    echo "  ci                                 	- Build and test all predefined configs"
+    echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
+    echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
+    echo "                                     	- else adds \"scenario\" into predefined list of scenarion"
+    echo "  <components>                       	- components:"
+    find ../components/ -name "*.component" -print0 | sort -z | xargs -0 -n1 basename -s .component | xargs -n1 echo "  "
+    echo "  <build_params>                     	- pass additional arguments to build component (ie to 'make' command)"
+    echo "    --all                            	- build all Yalda component"
+    echo "    --initrd                         	- build initrd"
+    echo "    --component                      	- build specified component"
+    echo "    <target>                         	- run Makefile in  current folder with parametr \"target\" (field my be clear)"
+    echo "  <run_params>                       	- YALDA launch parameters"
+    echo "    --gui                            	- launch QEMU with SDL"
+    echo "    --gdb <gdb_out>                  	- launch gdbserver with output to gdbout (default: tcp::1234)"
+    echo "    -S                               	- QEMU will not start until gdb connected"
+}
+
+######################################### base preparation
+YALDA_LOG_SILENT=false
+YALDA_LOG_VERBOSE=false
+YALDA_NPROC=$(nproc)
+YALDA_ROOT_DIR=$(realpath $(dirname $BASH_SOURCE)/../)
+YALDA_COMPONENT_EXT=".component"
+THIS_DIR=$PWD
+
+# if this dir contain dir .yalda then assume there is config inside it
+# or if we are going to launch 'config' here
+# else use comon workdir inside YALDA_ROOT_DIR
+if [ -d "$THIS_DIR/.yalda" ] || [ "$1" == "config" ];then
+    YALDA_WORKDIR=$THIS_DIR/.yalda
+else
+    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
+fi
+
+
+#if [[ $THIS_DIR =~ ^$YALDA_ROOT_DIR ]]; then
+#    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
+#else
+#    YALDA_WORKDIR=$THIS_DIR/.yalda
+#fi
+
+########################################### help case
+function call_help
+{
+    # Commands and parameters list are used by bash completition
+    # See ../scripts/completion.bash for more info
+    echo "Usage: $(basename $0) [COMMAND] ..."
+    echo "Common launching arguments:"
+    echo "  -h|--help                          	- gets this help"
+    echo "  -s|--silent                        	- do not print YALDA logs except errors"
+    echo "  -V|--verbose                       	- print verbosed commands output"
+    echo "  -c|--cpu=<AMOUNT>                  	- limit cpus"
+    echo "The following are valid commands:"
+    echo "  sync  [<components>]               	- sync sources and check it is up to date"
+    echo "  build [<components>|<build_params>]	- build curent dir for YALDA"
+    echo "  config [<components>]              	- without params runs YALDA configuration"
+    echo "  run <run_params>                   	- launch YALDA"
+    echo "  clean [<components>|<build_params>]	- clean YALDA in the curent dir"
+    echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
+    echo "  ci                                 	- Build and test all predefined configs"
+    echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
+    echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
+    echo "                                     	- else adds \"scenario\" into predefined list of scenarion"
+    echo "  <components>                       	- components:"
+    while IFS= read -r file; do
+        echo  "    $(basename $file $YALDA_COMPONENT_EXT)                      	- ${file#$YALDA_ROOT_DIR}"
+    done < <(find $YALDA_ROOT_DIR/components/  -name "*$YALDA_COMPONENT_EXT" -print | sort)
+    echo "  <build_params>                     	- pass additional arguments to build component (ie to 'make' command)"
+    echo "    --all                            	- build all Yalda component"
+    echo "    --initrd                         	- build initrd"
+    echo "    <target>                         	- run Makefile in  current folder with parameters \"target\" (ie 'clear')"
+    echo "  <run_params>                       	- YALDA launch parameters"
+    echo "    --gui                            	- launch QEMU with SDL"
+    echo "    --gdb <gdb_out>                  	- launch gdbserver with output to gdbout (default: tcp::1234)"
+    echo "    -S                               	- QEMU will not start until gdb connected"
+}
+
+
+####################################### logger fuctions
+function log_log
+{
+    local RST='\033[0m'
+    local BG='\033[47m'
+    local FG
+    local TEXT6
+    case "$1" in
+        "error")
+            FG='\033[1;31m'
+            shift
+            TEXT=" [E]: $@"
+        ;;
+        "warning")
+            FG='\033[0;33m'
+            shift
+            TEXT=" [W]: $@"
+        ;;
+        "info")
+            FG='\033[0;30m'
+            shift
+            TEXT=" $@"
+        ;;
+        "debug")
+            FG='\033[1;30m'
+            shift
+            TEXT=" [D]: $@"
+        ;;
+        *)
+            false
+        ;;
+    esac
+    local COLS=$(tput cols)
+    local X=$((COLS-${#TEXT}))
+    printf "$FG$BG%s%*s$RST\n" "$TEXT" $X
+}
+
+function log_info
+{
+    $YALDA_LOG_SILENT || log_log "info" "$@"
+}
+function log_error
+{
+    log_log "error" "$@" 1>&2
+    false
+}
+function log_warning
+{
+    $YALDA_LOG_SILENT || log_log "warning" "$@" 1>&2
+}
+function log_dbg()
+{
+    ! $YALDA_LOG_VERBOSE || $YALDA_LOG_SILENT || log_log "debug" "$@"
+}
+function do_log
+{
+    if $YALDA_LOG_VERBOSE ; then
+        log_dbg "$@"
+        "$@"
+    else
+        "$@" >/dev/null
+    fi
+}
+
+while getopts ':hsV-:c:' OPT; do
+    # support long options: https://stackoverflow.com/a/28466267/519360
+    if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+        OPT="${OPTARG%%=*}"       # extract long option name
+        OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+        OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+    fi
+    case "$OPT" in
+        s|silent)
+            YALDA_LOG_SILENT=true
+        ;;
+        V|verbose)
+            YALDA_LOG_VERBOSE=true
+        ;;
+        h|help)
+            call_help
+            exit 0
+        ;;
+        c|cpu)
+            if ! [[ "$OPTARG" =~ ^[0-9]+$ ]]; then
+                log_error "No arg for CPU option or is not number"
+            fi
+            YALDA_NPROC=$OPTARG
+        ;;
+        ??*)
+            # bad long option
+            log_error "Illegal long option --$OPT"
+        ;;
+        :)
+            # If expected argument omitted in the last option:
+            log_error "-${OPTARG} requires an argument."
+        ;;
+        ?)
+            # bad short option (error reported via getopts)
+            log_error "Illegal short option -$OPTARG"
+        ;;
+        *)                                    # If unknown (any other) option:
+            log_error "Exit abnormally."
+        ;;
+    esac
+done
+shift $((OPTIND-1)) # remove parsed options and args from $@ list
+
+log_info "Workdir: $YALDA_WORKDIR"
+do_log mkdir -p "$YALDA_WORKDIR"
+
+#TODO reimplement tests
+if [[ -z "${YALDA_TEST_CONFIG_PATH}" ]]; then
+    CONFIG_PATH=$YALDA_WORKDIR/config
+else
+    CONFIG_PATH=$YALDA_TEST_CONFIG_PATH
+fi
+
+
+####################################### scan components
+#numbers in dir names are used to define dependencies and sync/build order
+declare -A YALDA_COMPONENTS
+declare -a YALDA_COMPONENTS_ORDER
+while IFS= read -r file; do
+    NAME="$(basename $file $YALDA_COMPONENT_EXT)"
+    YALDA_COMPONENTS[$NAME]=$file
+    YALDA_COMPONENTS_ORDER+=($NAME)
+done < <(find $YALDA_ROOT_DIR/components/  -name "*$YALDA_COMPONENT_EXT" -print | sort)
+
+#################################### build global YALDA variables basing on config
+#get curent YALDA config settings
+if [ -r "$CONFIG_PATH" ];then
+    source "$CONFIG_PATH" 2>/dev/null || true
+    #build
+    if [ "${CONFIG_YALDA_ARCH_HOST}" == "y" ]; then
+        YALDA_ARCH=$(uname -m)
+    else
+        YALDA_ARCH=${CONFIG_YALDA_ARCH}
+    fi
+
+# attempt to remove toolchain.file
+#    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" != "y" ]; then
+#        set -o allexport
+#        source "$YALDA_ROOT_DIR/build/arch/$YALDA_ARCH/toolchain.env"
+#        set +o allexport
+#    fi
+#    log_dbg "ARCH $YALDA_ARCH"
+#    log_dbg "Toolchain info:\n$(cat $YALDA_ROOT_DIR/build/arch/$YALDA_ARCH/toolchain.env)"
+
+    YALDA_INITRD="$YALDA_WORKDIR/$CONFIG_YALDA_INITRD"
+
+    YALDA_OUTPUT_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_OUTPUT_DIR"
+    do_log mkdir -p "$YALDA_OUTPUT_DIR"
+
+    ### kernel
+    YALDA_KERNEL_SOURCE_DIR="$CONFIG_YALDA_KERNEL_SOURCE_DIR"
+    #if path is not valid for the curent workdir
+    if [ ! -d "$CONFIG_YALDA_KERNEL_SOURCE_DIR" ]; then
+        YALDA_KERNEL_SOURCE_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_KERNEL_SOURCE_DIR"
+        do_log mkdir -p "$YALDA_KERNEL_SOURCE_DIR"
+    fi
+
+    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" == "y" ]; then
+        YALDA_KERNEL_BUILD_DIR="/lib/modules/$(uname -r)/build"
+    else
+        YALDA_KERNEL_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_KERNEL_BUILD_DIR"
+        do_log mkdir -p "$YALDA_KERNEL_BUILD_DIR"
+    fi
+
+    ### busybox
+    YALDA_BUSYBOX_SOURCE_DIR="$CONFIG_YALDA_BUSYBOX_SOURCE_DIR"
+    #if path is not valid for the curent workdir
+    if [ ! -d "$CONFIG_YALDA_BUSYBOX_SOURCE_DIR" ]; then
+        YALDA_BUSYBOX_SOURCE_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_BUSYBOX_SOURCE_DIR"
+        do_log mkdir -p "$YALDA_BUSYBOX_SOURCE_DIR"
+    fi
+
+    YALDA_BUSYBOX_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_BUSYBOX_BUILD_DIR"
+    do_log mkdir -p "$YALDA_BUSYBOX_BUILD_DIR"
+
+    ### qemu
+    YALDA_QEMU_SOURCE_DIR="$CONFIG_YALDA_QEMU_SOURCE_DIR"
+    #if path is not valid for the curent workdir
+    if [ ! -d "$CONFIG_YALDA_QEMU_SOURCE_DIR" ]; then
+        YALDA_QEMU_SOURCE_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_QEMU_SOURCE_DIR"
+        do_log mkdir -p "$YALDA_QEMU_SOURCE_DIR"
+    fi
+
+    YALDA_QEMU_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_QEMU_BUILD_DIR"
+    do_log mkdir -p "$YALDA_QEMU_BUILD_DIR"
+
+    ### uboot
+    YALDA_UBOOT_SOURCE_DIR="$CONFIG_YALDA_UBOOT_SOURCE_DIR"
+    #if path is not valid for the curent workdir
+    if [ ! -d "$CONFIG_YALDA_UBOOT_SOURCE_DIR" ]; then
+        YALDA_UBOOT_SOURCE_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_UBOOT_SOURCE_DIR"
+        do_log mkdir -p "$YALDA_UBOOT_SOURCE_DIR"
+    fi
+
+    YALDA_UBOOT_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_UBOOT_BUILD_DIR"
+    do_log mkdir -p "$YALDA_UBOOT_BUILD_DIR"
+##########  Components initialization
+for component in ${YALDA_COMPONENTS_ORDER[@]}; do
+    log_dbg "Init component $component"
+    unset -f do_init
+    source ${YALDA_COMPONENTS[$component]}
+    do_init
+done
+unset -f do_init
+unset -f do_sync
+unset -f do_build
+unset -f do_launch
+unset -f do_clean
+
+elif [ "$1" != "config" ];then
+    log_error "launch $(basename $0) config first in $(cd $YALDA_WORKDIR/.. && pwd) to create at least default configuration"
+fi
+
+
+##########  Sanity check of dependencies
+${YALDA_ROOT_DIR}/scripts/deps-check.sh ${YALDA_ROOT_DIR}/dependencies.txt
+
+#################################################### process command
+COMMAND=$1
+
+if [ -n "$COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh" ]; then
+    shift
+    source ${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh
+else
+#    [ -f "$YALDA_KERNEL_BUILD_DIR/.config" ] || log_error "Kernel build is not found at \"$YALDA_KERNEL_BUILD_DIR\". Try '$(basename $0) build --all'"
+    log_info "Start building in $THIS_DIR for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion) from $YALDA_KERNEL_BUILD_DIR"
+    make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" $@
+fi

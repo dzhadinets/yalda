@@ -1,0 +1,209 @@
+#!/bin/bash
+
+function do_init
+{
+    qemu_bin=""
+    QEMU_WAIT_UNTIL_DEBUG=n
+
+    case "$YALDA_ARCH" in
+        x86)
+            qemu_bin="qemu-system-i386"
+        ;;
+        x86_64)
+            qemu_bin="qemu-system-x86_64"
+        ;;
+        arm)
+            qemu_bin="qemu-system-arm -M virt,highmem=off -cpu cortex-a7 -smp 4"
+        ;;
+        arm64)
+            qemu_bin="qemu-system-aarch64 -M virt,highmem=off -cpu cortex-a53 -smp 4"
+        ;;
+        riscv)
+            qemu_bin="qemu-system-riscv64 -M virt"
+        ;;
+        *)
+            log_error "QEMU: Unsupported arch: ${YALDA_ARCH}"
+        ;;
+    esac
+    # xargs trim whitespaces from resulting string, example:
+    # "i386 " -> "i386"
+    qemu_system_arch=$(echo $qemu_bin | cut -d '-' -f3 | xargs)
+
+    if [ "$CONFIG_YALDA_BUILD_QEMU" == "y" ]; then
+        qemu_bin=$YALDA_QEMU_BUILD_DIR/out/$qemu_bin
+    fi
+}
+
+function do_sync
+{
+    if [ "$CONFIG_YALDA_BUILD_QEMU" == "y" ]; then
+        local version=$CONFIG_YALDA_QEMU_VERSION
+        if [ "$CONFIG_YALDA_QEMU_FROM_URL" == "y" ]; then
+            if [ "$version" == "default" ]; then
+                log_error "Default is not an option for archive (do not know hot to get the last). Please specify version"
+            elif [ "$version" == "host" ]; then
+                version="$($qemu_bin --version | head -1 | tr -s ' ' | cut -d ' ' -f4 )"
+            fi
+            component_fetch_unpack "qemu" "$YALDA_QEMU_SOURCE_DIR" "https://download.qemu.org/qemu-$version.tar.xz"
+        elif [ "$CONFIG_YALDA_QEMU_FROM_GIT" == "y" ]; then
+            if [ "$version" == "default" ]; then
+                version="master"
+            elif [ "$version" == "host" ]; then
+                version="$($qemu_bin --version | head -1 | tr -s ' ' | cut -d ' ' -f4 )"
+            fi
+            component_git_sync "qemu" "$YALDA_QEMU_SOURCE_DIR" "https://gitlab.com/qemu-project/qemu.git" "v$version" || true
+            sync_submodule $YALDA_QEMU_SOURCE_DIR
+        elif [ "$CONFIG_YALDA_QEMU_FROM_DIR" == "y" ]; then
+            pushd $YALDA_QEMU_SOURCE_DIR >/dev/null
+            if ! ./configure --help | grep "$qemu_system_arch-softmmu" >/dev/null; then
+                log_error "QEMU source does support selected architecture ($ARCH)."
+                exit 1
+            fi
+            popd >/dev/null
+        else
+            log_error "Unknown sync method"
+        fi
+    fi
+    log_info "QEMU sync has been done"
+}
+
+function do_build
+{
+    if [ "$CONFIG_YALDA_BUILD_QEMU" == "y" ]; then
+        local version=$CONFIG_YALDA_QEMU_VERSION
+        pushd "$YALDA_QEMU_SOURCE_DIR" >/dev/null
+        if [ "$CONFIG_YALDA_QEMU_PATCH" == "y" ]; then
+            QUILT_PATCHES="$(realpath $(dirname $BASH_SOURCE)/patches)" quilt push -a || true
+        fi
+        popd >/dev/null
+
+        pushd "$YALDA_QEMU_BUILD_DIR" >/dev/null
+        local configure_flags="\
+        --target-list=$qemu_system_arch-softmmu \
+        --enable-virtfs \
+        --prefix=$YALDA_QEMU_BUILD_DIR \
+        --bindir=$YALDA_QEMU_BUILD_DIR/out
+        "
+
+        # QEMU configuration script has conflicts with CFLAGS and LDFLAGS
+        unset CFLAGS
+        unset LDFLAGS
+        $YALDA_QEMU_SOURCE_DIR/configure $configure_flags
+        make -j$YALDA_NPROC && make install
+        popd >/dev/null
+    else
+        if $qemu_bin --version | grep "QEMU emulator"; then
+            log_info "QEMU emulator is ready."
+        else
+            log_error "QEMU emulator is not ready. Please install or build it."
+        fi
+    fi
+
+    if [[ "$ARCH" =~ ^arm ]] || [[ "$ARCH" == riscv ]]; then
+        if [ -n "$CONFIG_YALDA_QEMU_DTB_PATH" ];then
+            log_info "Get qemu base device tree"
+            eval $qemu_bin -machine dumpdtb="$YALDA_WORKDIR/qemu.dtb"
+            log_info "Merge base device tree with $YALDA_WORKDIR/$CONFIG_YALDA_QEMU_DTB_PATH"
+            cat  <(dtc -I dtb "$YALDA_WORKDIR/qemu.dtb") <(dtc -I dts -O dts "$YALDA_WORKDIR/$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | dtc - -o "$YALDA_WORKDIR/merged.dtb"
+        fi
+    fi
+}
+
+function make_gdb_init
+{
+    if [ "$QEMU_WAIT_UNTIL_DEBUG" == "y" ]; then
+        local KERNEL_CONFIG_PATH=$YALDA_KERNEL_BUILD_DIR/.config
+        export PAGING_DONE_ADDR=$($YALDA_ROOT_DIR/components/gdb/get_paging_done_addr.sh \
+            $YALDA_ARCH \
+            $YALDA_KERNEL_BUILD_DIR \
+            $KERNEL_CONFIG_PATH)
+        if [ -z "$PAGING_DONE_ADDR" ]; then
+            log_error "Failed to calculate PAGING_DONE_ADDR var"
+            return -1
+        fi
+
+        GDBINIT_TEMPLATE="$YALDA_ROOT_DIR/components/060-gdb/gdbinit_S.template"
+    else
+        GDBINIT_TEMPLATE="$YALDA_ROOT_DIR/components/060-gdb/gdbinit.template"
+    fi
+
+    local REMOTE_TARGET="${gdb#tcp\:}"
+    export THIS_DIR REMOTE_TARGET
+    envsubst < $GDBINIT_TEMPLATE > "$YALDA_WORKDIR/gdbinit"
+    trap "rm -f \"$YALDA_WORKDIR/gdbinit\"" EXIT
+}
+
+function qemu_launch
+{
+    local gdb="tcp::1234"
+    local params
+    local gui=false
+    while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --gdb)
+            gdb=$2
+            shift 2
+            ;;
+        --gui)
+            gui=true
+            shift
+            ;;
+        -S)
+            QEMU_WAIT_UNTIL_DEBUG=y
+            params+=" -S"
+            shift
+            ;;
+        *)
+            log_warning "Unknown param: $1"
+            break
+            ;;
+    esac
+    done
+
+    params+=" -kernel \"$YALDA_WORKDIR/kernel.image\" -initrd \"$YALDA_INITRD\""
+    params+=" -append \"$CONFIG_YALDA_QEMU_KERNEL_CMDLINE\""
+    params+=" -m ${CONFIG_YALDA_QEMU_MEM}G -gdb $gdb"
+    $gui || params+=" -nographic"
+    if [ "$CONFIG_YALDA_BUILD_UBOOT" == "y" ];then
+        params+=" -bios \"$YALDA_UBOOT_BUILD_DIR/u-boot.bin\""
+    fi
+
+#    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" == "y" ];then
+#``        params+="  -hda fat:rw:$THIS_DIR -cdrom $THIS_DIR/.yalda/file.img"
+#    fi
+
+    if [ "$CONFIG_YALDA_QEMU_SHARE_DIR" == "y" ];then
+        params+=" -fsdev local,id=share_dev,path=\"$THIS_DIR\",security_model=none -device virtio-9p-pci,fsdev=share_dev,mount_tag=host_share"
+        params+=" -fsdev local,id=share_home_dev,path=\"$YALDA_WORKDIR\",security_model=none -device virtio-9p-pci,fsdev=share_home_dev,mount_tag=home_share"
+    fi
+
+    [ -c /dev/kvm ] && [ $(eval "${qemu_bin} -accel help | grep kvm") ] && params+=" -enable-kvm"
+
+    if [ "$CONFIG_YALDA_QEMU_USB" == "y" ];then
+        params+=" -device qemu-xhci,id=xhci"
+        params+=" -device usb-host,vendorid=0x1a86" #china debug dongle
+        params+=" -device usb-host,vendorid=0x04b4" #softeq debug dongle
+        if [ -z "$YALDA_QEMU_USB_VIDPID" ];then
+            params+=" -device usb-host,$YALDA_QEMU_USB_VIDPID" #china debug dongle
+        fi
+    fi
+
+    if [ -n "$CONFIG_YALDA_QEMU_DTB_PATH" ];then
+        params+=" -dtb \"$YALDA_WORKDIR/merged.dtb\""
+    fi
+
+
+    if [ ! -f "$YALDA_WORKDIR/gdbinit" ];then
+        make_gdb_init
+    fi
+
+    log_info "${qemu_bin} ${params}"
+    eval "${qemu_bin} ${params}"
+}
+
+function do_clean
+{
+    rm -f "$YALDA_WORKDIR/qemu.dtb"
+    rm -f "$YALDA_WORKDIR/merged.dtb"
+#TODO: clean sources
+}

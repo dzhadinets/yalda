@@ -1,0 +1,72 @@
+# for tui mode it disables annoing paging
+set pagination off
+
+# connect to YALDA
+target remote ${REMOTE_TARGET}
+
+# Do not require continue key when screen is filled with logs
+set pagination off
+
+# in most cases we need to debug single thread
+set scheduler-locking on
+
+define on_paging_enabled
+  # Remove all prev breakpoints
+  delete
+  # adds temporary breakpoint on module init/exit functions
+  b do_init_module
+  commands
+  silent
+      lx-symbols ${THIS_DIR}
+      tb *mod->init
+      tb *mod->exit
+      c
+  end
+
+  b start_kernel
+  commands
+  silent
+    lx-symbols ${THIS_DIR}
+  end
+c
+end
+
+# Setting breakpoint in kernel while kernel is not loaded is tricky
+# Important boot locations
+# 0x0fff0 - realmode16. x86 CPU on reset address, bios reset vector
+# 0xcb000 - bios loads complete linuxboot_dma.bin here. Mentioned file is structured - rom_header, pnp_header, rom instructions
+# 0xcb054 - realmode16: bios runs first instruction of linuxboot_dma.bin from here.
+# 0x10000 - bzImage is loaded to this address
+# 0x10200 - realmode16: Entry to first linux kernel setup instruction in bzImage, see _start: arch/x86/boot/header.S
+# 0x1026c - realmode16: start_of_setup: arch/x86/boot/header.S, _start jmps here, zeroes bss, jumps to main
+# 0x102bf - realmode16: instruction that calls main
+# 0x111d0 - realmode16: C main function main: arch/x86/boot/main.c,
+#           jumps to protected mode jumps to boot_params.hdr.code32_start
+# 0x000115f8 - last instruction before jump to protected mode code ljmup 0x10, 0x33b9
+# 0x00100000 - startup_32: arch/x86/boot/compressed/head_32.S - setup paging, switch to 64 bit mode
+# 0x00100200 - startup_64: arch/x86/boot/compressed/head_64.S - copy compressed kernel
+#              and jump to decompression code
+# 0x01000000 - phys_startup_64, startup_64 in arch/x86/kernel/head_64.S, entrypoint in uncompressed kernel
+# 0x01000250 - __startup_64 in arch/x86/kernel/head64.c, startup_64 calls this to setup page table
+# XXXXXXXXXX - PAGING_DONE_ADDR, address of code in secondary_startup_64_no_verify that makes new page table
+#              effective.
+#       .....
+#	movq	%cr4, %rcx
+#	movq	%rcx, %rax
+#	xorq	$X86_CR4_PGE, %rcx
+#	movq	%rcx, %cr4
+#	movq	%rax, %cr4
+#	movq	$1f, %rax <------------------ PAGING_DONE_ADDR
+# We need to set a hardware breakpoint at this physical address in order to use "b function_name" in kernel code
+# because 'function_name' symbol is resolved to virtual address like "0xffffffff80000000" which require
+# working page table to translate it to physical address, so that QEMU could write a breakpoint in that address.
+
+hbreak *${PAGING_DONE_ADDR}
+commands
+  silent
+  # Remove this hardware breakpoint
+  delete
+  on_paging_enabled
+  c
+end
+c

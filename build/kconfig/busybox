@@ -1,0 +1,55 @@
+menu "Busybox"
+
+config YALDA_BUILD_BUSYBOX
+  bool "Build busybox from sources"
+  default y
+  help
+    to get and build busybox or not. If not then make sure that proper rootfs is prepared manually
+
+if YALDA_BUILD_BUSYBOX
+
+choice
+  prompt "Source"
+  default YALDA_BUSYBOX_FROM_URL
+  help
+    Source of busybox tree (url | git | dir)
+
+config YALDA_BUSYBOX_FROM_URL
+  bool "url"
+
+config YALDA_BUSYBOX_FROM_GIT
+  bool "git"
+
+config YALDA_BUSYBOX_FROM_DIR
+  bool "dir"
+  help
+    The system will expect sources in YALDA_BUSYBOX_SOURCE_DIR
+endchoice
+
+config YALDA_BUSYBOX_SOURCE_DIR
+  string "Local source dir"
+  default "busybox"
+  help
+    Path to Busybox source tree
+
+config YALDA_BUSYBOX_BUILD_DIR
+  string "Build workdir"
+  default "build/busybox"
+
+config YALDA_BUSYBOX_VERSION
+  string "Version"
+  depends on YALDA_BUSYBOX_FROM_GIT || YALDA_BUSYBOX_FROM_URL
+  default "default" if YALDA_BUSYBOX_FROM_GIT
+  default "1.36.0" if YALDA_BUSYBOX_FROM_URL
+  help
+    Required busybox version (default | <version>)
+
+config YALDA_BUSYBOX_PATCH
+  bool "Apply YALDA patches"
+  default y
+  help
+    Apply YALDA's busybox patches
+
+endif #YALDA_BUILD_BUSYBOX
+
+endmenu

@@ -1,0 +1,20 @@
+menu "GDB"
+
+config YALDA_GDB_FROM_TOOLCHAIN
+  bool "Use GDB from toolchain with toolchain prefix"
+  depends on YALDA_USE_TOOLCHAIN
+  default y
+
+config YALDA_GDB_SCRIPT
+  string "Init script"
+  default "./scripts/gdb/kernel_gdb_script"
+  help
+    GDB initialization script to run
+
+config YALDA_GDB_PARAMETERS
+  string "Launch parameters"
+  default "-tui -nx -iex set auto-load safe-path /"
+  help
+    GDB parameters
+
+endmenu

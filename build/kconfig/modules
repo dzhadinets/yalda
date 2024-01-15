@@ -1,0 +1,22 @@
+menu Modules
+
+config YALDA_BUILD_EXAMPLE_MODULE
+  bool "Build example module"
+  default n
+  help
+    Build and install YALDA example module
+
+config YALDA_BUILD_EXAMPLE_APPLAICTION
+  bool "Build test application for userspace"
+  depends on YALDA_BUILD_EXAMPLE_MODULE
+  default n
+  help
+    Build and install test application for userspace
+
+config YALDA_BUILD_UDD
+  bool "Build the driver for USB Debug Dongle (not implemented)"
+  default n
+  help
+    Build driver for (https://gitlab/dzhadinets/usb-debug-dongle.git)
+
+endmenu

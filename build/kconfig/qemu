@@ -1,0 +1,97 @@
+menu "QEMU"
+
+config YALDA_BUILD_QEMU
+  bool "Build QEMU from sources"
+  default n
+  help
+    Run QEMU from the local build
+
+if YALDA_BUILD_QEMU
+
+choice
+  prompt "Source"
+  default YALDA_QEMU_FROM_URL
+  help
+    Source of QEMU tree (url | git | dir)
+
+config YALDA_QEMU_FROM_URL
+  bool "url"
+
+config YALDA_QEMU_FROM_GIT
+  bool "git"
+
+config YALDA_QEMU_FROM_DIR
+  bool "dir"
+  help
+    The system will expect sources in YALDA_QEMU_SOURCE_DIR
+endchoice
+
+config YALDA_QEMU_SOURCE_DIR
+  string "Source dir"
+  default "qemu"
+  help
+    Path to QEMU source tree
+
+config YALDA_QEMU_BUILD_DIR
+  string "Build workdir"
+  default "build/qemu"
+
+config YALDA_QEMU_VERSION
+  string "Version"
+  depends on YALDA_QEMU_FROM_GIT || YALDA_QEMU_FROM_URL
+  default "default" if YALDA_QEMU_FROM_GIT
+  default "7.2.0" if YALDA_QEMU_FROM_URL
+  help
+    Required QEMU version (default | <version>)
+
+config YALDA_QEMU_PATCH
+  bool "Apply YALDA patches"
+  default y
+  help
+    Apply YALDA's QEMU patches
+
+endif #YALDA_BUILD_QEMU
+
+config YALDA_QEMU_KERNEL_CMDLINE
+  string "cmdline"
+  default "nokaslr, console=ttyAMA0" if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
+  default "nokaslr, console=ttyS0, rdinit=/sbin/init" if YALDA_KERNEL_FROM_HOST
+  default "nokaslr, console=ttyS0"
+  help
+    Kernel command line arguments
+
+config YALDA_QEMU_DTB_PATH
+  string "dtb"
+  depends on YALDA_ARCH_ARM
+  default ""
+  help
+    Path to Device Tree Blob (dtb) file
+
+config YALDA_QEMU_MEM
+  string "memory (GB)"
+  default "2"
+  help
+    Amount of RAM for QEMU VM (in GB)
+
+config YALDA_QEMU_SHARE_DIR
+  bool "Share dir"
+  default y
+  help
+    Share YALDA_WORKDIR with VM
+
+config YALDA_QEMU_USB
+  bool "Share USB interface"
+  default n
+  help
+    Enable USB interface
+
+config YALDA_QEMU_USB_VIDPID
+  string "Additional USB VID/PID"
+  depends on YALDA_QEMU_USB
+  default ""
+  help
+    VID and PID which will be thrown from host
+    Format:
+       vendorid=0xDEAD,productid=0xBEEF
+
+endmenu

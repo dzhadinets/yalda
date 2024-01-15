@@ -1,0 +1,110 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+function do_sync
+{
+    local version="$CONFIG_YALDA_KERNEL_VERSION"
+
+    if [ "$CONFIG_YALDA_KERNEL_FROM_URL" == "y" ]; then
+        if [ -n "$CONFIG_YALDA_KERNEL_CUSTOM_URL" ]; then
+            component_fetch_unpack "kernel" "$YALDA_KERNEL_SOURCE_DIR" "$CONFIG_YALDA_KERNEL_CUSTOM_URL"
+        else
+            if [ "$version" == "default" ]; then
+                log_error "Default is not an option for archive (do not know hot to get the last). Please specify version"
+            elif [ "$version" == "host" ]; then
+                version="$(uname -r | cut -d- -f1 | cut -d. -f1,2,3)"
+            fi
+            local gen="$(echo $version | cut -d. -f1)"
+            local minor="$(echo $version | cut -d. -f3)"
+            [ "$minor" == "0" ] && version="$(echo $version | cut -d. -f1,2)"
+            component_fetch_unpack "kernel" "$YALDA_KERNEL_SOURCE_DIR" "https://cdn.kernel.org/pub/linux/kernel/v${gen}.x/linux-$version.tar.xz"
+        fi
+    elif [ "$CONFIG_YALDA_KERNEL_FROM_GIT" == "y" ]; then
+        if [ "$version" == "default" ]; then
+            version="master"
+        elif [ "$version" == "host" ]; then
+            version="$(uname -r | cut -d- -f1 | cut -d. -f1,2)"
+        fi
+        if [ -n "$CONFIG_YALDA_KERNEL_CUSTOM_URL" ]; then
+            component_git_sync "kernel" "$YALDA_KERNEL_SOURCE_DIR" "$CONFIG_YALDA_KERNEL_CUSTOM_URL" "$version"
+        else
+            component_git_sync "kernel" "$YALDA_KERNEL_SOURCE_DIR" "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git" "$version"
+        fi
+    elif [ "$CONFIG_YALDA_KERNEL_FROM_DIR" == "y" ]; then
+        pushd $CONFIG_YALDA_KERNEL_SOURCE_DIR >/dev/null
+        log_info "Found kernel source with version $(make -s kernelversion)"
+        popd >/dev/null
+    elif [ "$CONFIG_YALDA_KERNEL_FROM_HOST" == "y" ]; then
+        declare `xargs -n1 -a /proc/cmdline | grep BOOT_IMAGE`
+        log_info "Copying vmlinz from $BOOT_IMAGE to $YALDA_WORKDIR/kernel.image"
+        log_info "Sudo is needed. I will forget the grant right after the copying"
+        sudo -k bash -c "cp -L \"$BOOT_IMAGE\" \"$YALDA_WORKDIR/kernel.image\"; chown $USER:$USER \"$YALDA_WORKDIR/kernel.image\"" \
+             || bash -c 'sudo -K;false' \
+             && sudo -K
+    else
+        log_error "Unknown sync method"
+    fi
+    log_info "Kernel sync has been done"
+}
+
+function do_build
+{
+    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" != "y" ]; then
+        pushd "$YALDA_KERNEL_SOURCE_DIR" >/dev/null
+        local kernel_version="$(make -s kernelversion)"
+        log_info "Building kernel version $kernel_version"
+        if [ $# -eq 0 ];then
+            if [ ! -r "$YALDA_KERNEL_BUILD_DIR/.config" ];then
+                if [ "$CONFIG_YALDA_KERNEL_PATCH" == "y" ]; then
+                    local patches_path="$(realpath $(dirname $BASH_SOURCE)/patches)"
+                    local series_path=$(get_series_for_version $kernel_version $patches_path)
+                    log_info "Series file for quilt: [ $series_path ]"
+                    QUILT_PATCHES=$patches_path QUILT_SERIES=$series_path quilt push -av || true
+                fi
+                make $CONFIG_YALDA_KERNEL_BASE_CONFIG O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                local yalda_config="$(realpath $(dirname $BASH_SOURCE))/yalda.config"
+                ./scripts/kconfig/merge_config.sh -m -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "${YALDA_ROOT_DIR}/build/arch/${ARCH}/kernel.config"> $YALDA_KERNEL_BUILD_DIR/merge1.log
+                ./scripts/kconfig/merge_config.sh -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config"> $YALDA_KERNEL_BUILD_DIR/merge2.log
+                local conf_diff="`./scripts/diffconfig "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config" | grep "+"`"
+                [ -n "$conf_diff" ] && log_warning "Not all YALDA configs have been applied: \n$conf_diff"
+            fi
+#todo replace O= with KBUID_OUTPUT or like that
+            if [[ "$ARCH" == arm64 ]] || [[ "$ARCH" == riscv ]]; then
+                make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+            else
+                make bzImage -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+            fi
+
+            make modules_prepare O="$YALDA_KERNEL_BUILD_DIR"
+            make modules -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+            make modules_install INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" O="$YALDA_KERNEL_BUILD_DIR"
+            make scripts_gdb -j$(nproc) O="$YALDA_KERNEL_BUILD_DIR"
+
+            if [[ "$ARCH" =~ ^arm ]]; then
+                make dtbs O="$YALDA_KERNEL_BUILD_DIR"
+            fi
+            local kernel_path=$(make -s image_name O="$YALDA_KERNEL_BUILD_DIR")
+            ln -sf "$YALDA_KERNEL_BUILD_DIR/$kernel_path" "$YALDA_WORKDIR/kernel.image"
+        else
+            make O="$YALDA_KERNEL_BUILD_DIR" $@
+        fi
+        popd >/dev/null
+    fi
+    log_info "Kernel build has been done"
+}
+
+function do_clean
+{
+    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" == "y" ]; then
+        rm -f "$YALDA_WORKDIR/kernel.image"
+    else
+        pushd "$YALDA_KERNEL_SOURCE_DIR" >/dev/null
+        rm -rf .pc
+        make mrproper O="$YALDA_KERNEL_BUILD_DIR"
+        popd >/dev/null
+    fi
+}

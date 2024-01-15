@@ -1,0 +1,100 @@
+mainmenu "Yalda configuration"
+
+choice
+  prompt "Target arch"
+  default YALDA_ARCH_HOST
+  help
+    Select target architecture that will be used for the build
+
+config YALDA_ARCH_X86
+  bool "x86"
+  help
+    Prepare components for x86 architecture
+
+config YALDA_ARCH_X86_64
+  bool "x86_64"
+  help
+    Prepare components for x86 64bit architecture
+
+config YALDA_ARCH_ARM
+  bool "arm"
+  help
+    Prepare components for arm architecture
+
+config YALDA_ARCH_ARM64
+  bool "arm64"
+  help
+    Prepare components for arm 64bit architecture
+
+config YALDA_ARCH_RISCV
+  bool "risc-v"
+  help
+    Prepare components for RISC-V5 64bit architecture
+
+config YALDA_ARCH_HOST
+  bool "host"
+  select YALDA_USE_HOST_KERNEL
+  help
+    Obtain the architecture from the host and prepare components for the architecture
+    In additional it selects the using of your kernel for launching. Make sure you have symbols and headers installed
+endchoice
+
+#NOTE: Do not forget to duplicate the arch from previus choice
+config YALDA_ARCH
+  string
+  default "arm" if YALDA_ARCH_ARM
+  default "arm64" if YALDA_ARCH_ARM64
+  default "x86" if YALDA_ARCH_X86
+  default "x86_64" if YALDA_ARCH_X8664
+  default "riscv" if YALDA_ARCH_RISCV
+
+config YALDA_ARCH_64BITS
+  bool
+  default y if YALDA_ARCH_ARM64 || YALDA_ARCH_X8664 || YALDA_ARCH_RISCV || YALDA_ARCH_HOST
+
+menu "Components"
+
+source toolchain
+#temporary do not support not ARM architecture
+if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
+  source uboot
+endif
+source kernel
+source busybox
+source rootfs
+source modules
+source qemu
+source gdb
+
+endmenu
+
+menu "Build"
+config YALDA_PREBUILD_PATH
+  string "Path to the pre-build script"
+  default ""
+  help
+    The option how to add runtime data to rootfs or in general to build procedure
+
+config YALDA_POSTBUILD_PATH
+  string "Path to the post-build script"
+  default ""
+  help
+    This option allows to modify resulting outcome ie. build initial firmware to combine several bootloaders
+
+endmenu
+
+menu "Result"
+
+config YALDA_OUTPUT_DIR
+  string "Output directory"
+  default "output"
+  help
+    Path to the rootFS where compinents will be installed
+
+config YALDA_INITRD
+  string "Init Ram Disk path"
+  default "initrd.cpio.gz"
+  help
+    Path to the resulting initrd.cpio.gz file
+
+endmenu

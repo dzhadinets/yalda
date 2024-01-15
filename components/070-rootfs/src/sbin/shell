@@ -1,0 +1,6 @@
+#!/bin/sh -a
+
+echo $@
+
+. /etc/profile
+/bin/sh

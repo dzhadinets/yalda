@@ -1,0 +1,76 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+YALDA_MODULES_DIR="$YALDA_ROOT_DIR/components/modules/"
+YALDA_MODULES_SRC_DIR="$YALDA_WORKDIR/src/modules/"
+
+YALDA_USB_WHISTLE_GIT_URL="ssh://git@stash.softeq.com:7999/emblab/usb-debug-whistle.git"
+YALDA_USB_WHISTLE_SRC_DIR="$YALDA_MODULES_SRC_DIR/whistle/"
+YALDA_USB_WHISTLE_SRC_SUBDIR="$YALDA_USB_WHISTLE_SRC_DIR/subcomponents/kernel_module/"
+
+component_list=()
+
+if [ "$CONFIG_YALDA_BUILD_EXAMPLE_MODULE" == "y" ]; then
+    component_list+=("module")
+fi
+
+if [ "$CONFIG_YALDA_BUILD_EXAMPLE_APPLAICTION" == "y" ]; then
+    component_list+=("test_application")
+fi
+
+function do_sync
+{
+    mkdir -p "$YALDA_MODULES_SRC_DIR"
+
+    for comp_name in "${component_list[@]}"; do
+        log_info "sync for $comp_name"
+        cp -R "$YALDA_MODULES_DIR/$comp_name" "$YALDA_MODULES_SRC_DIR"
+    done
+#TODO check whistle
+    if [ "$CONFIG_YALDA_BUILD_UDD" == "y" ]; then
+        mkdir -p "$YALDA_USB_WHISTLE_SRC_DIR"
+        version="master"
+        component_git_sync "whistle" "$YALDA_USB_WHISTLE_SRC_DIR" "$YALDA_USB_WHISTLE_GIT_URL" "$version"
+    fi
+
+}
+
+function do_build
+{
+    for comp_name in "${component_list[@]}"; do
+        log_info "build for $comp_name"
+        pushd "$YALDA_MODULES_SRC_DIR/$comp_name" >/dev/null
+        KDIR="$YALDA_KERNEL_BUILD_DIR" make all
+        KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" make install
+        popd >/dev/null
+    done
+
+    if [ "$CONFIG_YALDA_BUILD_UDD" == "y" ]; then
+        log_info "build for whistle"
+        pushd "$YALDA_USB_WHISTLE_SRC_SUBDIR" >/dev/null
+        KDIR="$YALDA_KERNEL_BUILD_DIR" make all
+        KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" make install
+        popd >/dev/null
+    fi
+}
+
+function do_clean
+{
+    for comp_name in "${component_list[@]}"; do
+        log_info "clean for $comp_name"
+        pushd "$YALDA_MODULES_SRC_DIR/$comp_name" >/dev/null
+        KDIR="$YALDA_KERNEL_BUILD_DIR" make clean
+        popd >/dev/null
+    done
+
+    if [ "$CONFIG_YALDA_BUILD_UDD" == "y" ]; then
+        log_info "clean for whistle"
+        pushd "$YALDA_USB_WHISTLE_SRC_SUBDIR" >/dev/null
+        KDIR="$YALDA_KERNEL_BUILD_DIR" make clean
+        popd >/dev/null
+    fi
+}

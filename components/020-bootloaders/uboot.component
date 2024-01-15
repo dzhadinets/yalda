@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+function do_sync
+{
+    local version=$CONFIG_YALDA_UBOOT_VERSION
+    if [ "$CONFIG_YALDA_BUILD_UBOOT" == "y" ]; then
+        if [ "$CONFIG_YALDA_UBOOT_FROM_URL" == "y" ]; then
+            component_fetch_unpack "u-boot" "$YALDA_UBOOT_SOURCE_DIR" "https://github.com/u-boot/u-boot/archive/refs/tags/$version.tar.gz"
+        elif [ "$CONFIG_YALDA_UBOOT_FROM_GIT" == "y" ]; then
+            if [ "$CONFIG_YALDA_UBOOT_VERSION" == "default" ]; then
+                version="master"
+            fi
+            component_git_sync "u-boot" "$YALDA_UBOOT_SOURCE_DIR" "https://github.com/u-boot/u-boot.git" "$version"
+        elif [ "$CONFIG_YALDA_UBOOT_FROM_DIR" == "y" ]; then
+            pushd $CONFIG_YALDA_UBOOT_SOURCE_DIR >/dev/null
+            log_info "Found U-boot sources with version $(make ubootversion)"
+            popd >/dev/null
+        else
+            log_error "Unknown sync method"
+        fi
+    else
+        log_info "No need to do somethig. Default bootloader will be used."
+    fi
+    log_info "U-boot sync has been done"
+}
+
+function do_build
+{
+    if [ "$CONFIG_YALDA_BUILD_UBOOT" == "y" ]; then
+        pushd "$YALDA_UBOOT_SOURCE_DIR" >/dev/null
+        log_info "U-boot version $(make ubootversion)"
+        if [ ! -r "$YALDA_UBOOT_BUILD_DIR/.config" ];then
+            if [ "$CONFIG_YALDA_UBOOT_PATCH" == "y" ]; then
+                QUILT_PATCHES="$(realpath $(dirname $BASH_SOURCE)/patches)" quilt push -a || true
+            fi
+
+            if [ "${ARCH}" == "arm" ]; then
+                make qemu_arm_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+                local uboot_config="$(realpath $(dirname $BASH_SOURCE))/uboot_arm.config"
+                ./scripts/kconfig/merge_config.sh -O "$YALDA_UBOOT_BUILD_DIR" "$YALDA_UBOOT_BUILD_DIR/.config" "$uboot_config"
+            elif [ "${ARCH}" == "arm64" ]; then
+                make qemu_arm64_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+                local uboot_config="$(realpath $(dirname $BASH_SOURCE))/uboot_arm64.config"
+                ./scripts/kconfig/merge_config.sh -O "$YALDA_UBOOT_BUILD_DIR" "$YALDA_UBOOT_BUILD_DIR/.config" "$uboot_config"
+            elif [ "${ARCH}" == "x86" ]; then
+                make qemu-x86_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+            elif [ "${ARCH}" == "x86_64" ]; then
+                make qemu-x86_64_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+            fi
+        fi
+
+        make -j$YALDA_NPROC O="$YALDA_UBOOT_BUILD_DIR"
+        popd >/dev/null
+    fi
+}
+
+function do_clean
+{
+    if [ "$CONFIG_YALDA_BUILD_UBOOT" == "y" ]; then
+        pushd "$YALDA_UBOOT_SOURCE_DIR" >/dev/null
+        make mrproper O="$YALDA_UBOOT_BUILD_DIR"
+        popd >/dev/null
+    fi
+}

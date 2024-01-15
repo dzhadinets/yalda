@@ -1,0 +1,128 @@
+menu "Kernel"
+
+choice
+  prompt "Source"
+  help
+    Source of kernel tree (url | git | dir | host (if ARCH is host))
+
+config YALDA_KERNEL_FROM_HOST
+  depends on YALDA_ARCH_HOST
+  bool "use host kernel"
+  help
+    The system will expect sources/headers are installed in the system
+
+config YALDA_KERNEL_FROM_URL
+  bool "url to archive"
+  help
+    It uses https://cdn.kernel.org/pub/linux/kernel/ to obtaing version of the kernel.
+    If you need a custom one then get it manually and use _FROM_DIR option
+
+config YALDA_KERNEL_FROM_GIT
+  bool "git stable"
+  help
+    It uses https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git and its branch model to obtain version of the kernel
+    If you need a custom one then get it manually and use _FROM_DIR option
+
+config YALDA_KERNEL_FROM_DIR
+  bool "dir"
+  help
+    The system will expect kernel sources in YALDA_KERNEL_SOURCE_DIR
+endchoice
+
+if ! YALDA_KERNEL_FROM_HOST
+
+config YALDA_KERNEL_CUSTOM_URL
+  depends on YALDA_KERNEL_FROM_GIT || YALDA_KERNEL_FROM_URL
+  string "Custom source url"
+  default ""
+  help
+    In case of _FROM_GIT it will expect the url will be used as git source _VERSION as a branch
+    In case of _FROM_URL it will expect full path to the archive with kernel sources\
+
+choice YALDA_KERNEL_VERSION
+  prompt "Kernel version"
+  default YALDA_KERNEL_VERSION_HOST
+  depends on YALDA_KERNEL_FROM_GIT || ( YALDA_KERNEL_FROM_URL && YALDA_KERNEL_CUSTOM_URL = "" )
+  help
+    Required kernel version (host | default | <version>)
+
+config YALDA_KERNEL_VERSION_HOST
+  bool "host"
+  help
+    Obtain the same version of kernel like host uses
+
+config YALDA_KERNEL_VERSION_CUSTOM
+  bool "custom"
+
+config YALDA_KERNEL_VERSION_DEFAULT
+  depends on YALDA_KERNEL_FROM_GIT
+  bool "default"
+
+config YALDA_KERNEL_VERSION_6_1_22
+  bool "6.1.22"
+
+config YALDA_KERNEL_VERSION_5_15_105
+  bool "5.15.105"
+
+config YALDA_KERNEL_VERSION_5_10_176
+  bool "5.10.176"
+
+config YALDA_KERNEL_VERSION_5_4_238
+  bool "5.4.238"
+
+config YALDA_KERNEL_VERSION_4_19_279
+  bool "4.19.279"
+
+config YALDA_KERNEL_VERSION_4_14_311
+  bool "4.14.311"
+endchoice
+
+config YALDA_KERNEL_CUSTOM_VERSION
+  string "Custom kernel version"
+  depends on YALDA_KERNEL_VERSION_CUSTOM
+
+config YALDA_KERNEL_VERSION
+  string
+  default "host"      if YALDA_KERNEL_VERSION_HOST
+  default "default"   if YALDA_KERNEL_VERSION_DEFAULT
+  default YALDA_KERNEL_CUSTOM_VERSION   if YALDA_KERNEL_VERSION_CUSTOM
+  default "6.1.22"    if YALDA_KERNEL_VERSION_6_1_22
+  default "5.15.105"  if YALDA_KERNEL_VERSION_5_15_105
+  default "5.10.176"  if YALDA_KERNEL_VERSION_5_10_176
+  default "5.4.238"   if YALDA_KERNEL_VERSION_5_4_238
+  default "4.19.279"  if YALDA_KERNEL_VERSION_4_19_279
+  default "4.14.311"  if YALDA_KERNEL_VERSION_4_14_311
+
+config YALDA_KERNEL_SOURCE_DIR
+  string "Local source dir"
+  default "kernel"
+  help
+    Path to Kernel source tree
+
+config YALDA_KERNEL_BUILD_DIR
+  string "Build workdir"
+  default "build/kernel"
+
+config YALDA_KERNEL_ADDITIONAL_CONFIG
+  bool "Additional kernel config overlay"
+
+config YALDA_KERNEL_BASE_CONFIG
+  string "Base kernel config"
+  default "tinyconfig"
+
+config YALDA_KERNEL_CONFIG_PATH
+  string "Custom config path"
+  depends on YALDA_KERNEL_ADDITIONAL_CONFIG
+  default ""
+  help
+    Custom config path. It is overlay to YALDA's config.
+
+config YALDA_KERNEL_PATCH
+  bool "Apply YALDA patches"
+  default y
+  help
+    Apply YALDA's kernel patches. YALDA patches are strongly recommended if you do not apply them then make sure you are applying similar on your sources
+
+endif # ! YALDA_KERNEL_FROM_HOST
+
+endmenu

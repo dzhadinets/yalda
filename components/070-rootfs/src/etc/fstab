@@ -1,0 +1,12 @@
+# device-spec   mount-point     fs-type         options                                       dump    pass
+none            /proc           proc            defaults                                      0       0
+none            /tmp            tmpfs           defaults                                      0       0
+none            /sys            sysfs           defaults                                      0       0
+udev            /dev            devtmpfs        rw,nosuid,noexec,relatime,mode=755            0       0
+#devpts          /dev/pts         devpts         rw,nosuid,noexec,relatime,mode=620,ptmxmode=000 0 0
+#none            /dev/pts        devpts          defaults                                      0       0
+#tmpfs           /dev/shm        tmpfs           defaults                                      0       0
+#usbfs           /proc/bus/usb   usbfs           defaults                                      0       0
+host_share      /mnt/share      9p              trans=virtio,version=9p2000.L                 0       0
+home_share      /home           9p              trans=virtio,version=9p2000.L                 0       0
+#/mnt/share/home /home           none            bind, defaults                                0       0

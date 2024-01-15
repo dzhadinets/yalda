@@ -1,0 +1,31 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+YALDA_ROOTFS_SOURCE_DIR=$(realpath $(dirname $BASH_SOURCE)/src/)
+
+function do_sync
+{
+    log_info "Root filesystem is build-in"
+    cp -ruT "$YALDA_ROOTFS_SOURCE_DIR" "$YALDA_OUTPUT_DIR"
+    pushd "$YALDA_OUTPUT_DIR" >/dev/null
+    mkdir -pv {home,dev,proc,mnt/share,sys,tmp} > /dev/null
+    popd >/dev/null
+}
+
+function do_build
+{
+    log_info "Update copy of RootFS"
+    if [ -n "$CONFIG_YALDA_ROOTFS_ADDONS" ];then
+        log_info "Install addons of RootFS from $YALDA_WORKDIR/$CONFIG_YALDA_ROOTFS_ADDONS"
+        cp -ruT "$YALDA_WORKDIR/$CONFIG_YALDA_ROOTFS_ADDONS" "$YALDA_OUTPUT_DIR"
+    fi
+}
+
+function do_clean
+{
+    rm -rf "$YALDA_OUTPUT_DIR"
+}

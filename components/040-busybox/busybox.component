@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function do_init
+{
+    return
+}
+
+function do_sync
+{
+    local version=$CONFIG_YALDA_BUSYBOX_VERSION
+    if [ "$CONFIG_YALDA_BUILD_BUSYBOX" == "y" ]; then
+        if [ "$CONFIG_YALDA_BUSYBOX_FROM_URL" == "y" ]; then
+            if [ "$(echo $version | cut -d- -f1 | cut -d. -f1,2,3)" != "$version" ]; then
+                log_error "Please specify 3 digits version"
+            fi
+            component_fetch_unpack "busybox" "$YALDA_BUSYBOX_SOURCE_DIR" "https://busybox.net/downloads/busybox-$version.tar.bz2"
+        elif [ "$CONFIG_YALDA_BUSYBOX_FROM_GIT" == "y" ]; then
+            if [ "$CONFIG_YALDA_BUSYBOX_VERSION" == "default" ]; then
+                version="master"
+            fi
+            component_git_sync "busybox" "$YALDA_BUSYBOX_SOURCE_DIR" "https://git.busybox.net/busybox" "$version"
+        elif [ "$CONFIG_YALDA_BUSYBOX_FROM_DIR" == "y" ]; then
+            pushd $CONFIG_YALDA_BUSYBOX_SOURCE_DIR >/dev/null
+            log_info "Found Busybox sources with version $(make -s kernelversion)"
+            popd >/dev/null
+        else
+            log_error "Unknown sync method"
+        fi
+    else
+        log_info "No need to do somethig. Expect your rootfs already has required staff"
+    fi
+    log_info "Busybox sync has been done"
+}
+
+function do_build
+{
+    if [ "$CONFIG_YALDA_BUILD_BUSYBOX" == "y" ]; then
+        pushd "$YALDA_BUSYBOX_SOURCE_DIR" >/dev/null
+        local kernel_version="$(make -s kernelversion)"
+        log_info "Kernel version $kernel_version"
+        if [ $# -eq 0 ];then
+            if [ ! -r "$YALDA_BUSYBOX_BUILD_DIR/.config" ];then
+                if [ "$CONFIG_YALDA_BUSYBOX_PATCH" == "y" ]; then
+                    local patches_path="$(realpath $(dirname $BASH_SOURCE)/patches)"
+                    local series_path=$(get_series_for_version $kernel_version $patches_path)
+                    log_info "Series file for quilt: [ $series_path ]"
+                    QUILT_PATCHES=$patches_path QUILT_SERIES=$series_path quilt push -av || true
+                fi
+                make -s defconfig KBUILD_DEFCONFIG="$(realpath $(dirname $BASH_SOURCE))/defconfig" O="$YALDA_BUSYBOX_BUILD_DIR" >/dev/null
+            fi
+            make -j$YALDA_NPROC O="$YALDA_BUSYBOX_BUILD_DIR"
+            make install CONFIG_PREFIX="$YALDA_OUTPUT_DIR" O="$YALDA_BUSYBOX_BUILD_DIR"
+        else
+            make O="$YALDA_BUSYBOX_BUILD_DIR" $@
+        fi
+        popd >/dev/null
+    fi
+}
+
+function do_clean
+{
+    if [ "$CONFIG_YALDA_BUILD_BUSYBOX" == "y" ]; then
+        pushd "$YALDA_BUSYBOX_SOURCE_DIR" >/dev/null
+        rm -rf .pc
+        make uninstall CONFIG_PREFIX="$YALDA_OUTPUT_DIR" O="$YALDA_BUSYBOX_BUILD_DIR"
+        make mrproper O="$YALDA_BUSYBOX_BUILD_DIR"
+        popd >/dev/null
+    fi
+}

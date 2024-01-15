@@ -1,0 +1,8 @@
+menu "RootFS"
+
+config YALDA_ROOTFS_ADDONS
+  string "Addons path"
+  help
+    Path to addons to rootfs with configs, binaries etc
+
+endmenu
