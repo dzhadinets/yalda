@@ -131,7 +131,7 @@ function log_log
         ;;
     esac
     local COLS=$(tput cols)
-    local X=$((COLS-${#TEXT}))
+    local X=$((COLS - (${#TEXT} % COLS)))
     printf "$FG$BG%s%*s$RST\n" "$TEXT" $X
 }
 

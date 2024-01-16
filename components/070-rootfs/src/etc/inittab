@@ -1,5 +1,5 @@
-::sysinit:/etc/rc
-::respawn:-/sbin/shell
+::sysinit:/etc/rcS
+::respawn:/sbin/shell
 ::restart:/sbin/init
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/sbin/shutdown

@@ -13,8 +13,12 @@ config YALDA_GDB_SCRIPT
 
 config YALDA_GDB_PARAMETERS
   string "Launch parameters"
-  default "-tui -nx -iex set auto-load safe-path /"
+  default "-tui -nx -iex \"set auto-load safe-path .\""
   help
     GDB parameters
+
+config YALDA_GDB_FROM_IDE
+  bool "Enable interactive mode for IDE integration"
+  default n
 
 endmenu

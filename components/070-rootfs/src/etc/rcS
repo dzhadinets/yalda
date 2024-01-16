@@ -1,13 +1,11 @@
 #!/bin/sh
 
-echo $@
-
 #mount -t devtmpfs mdev /dev -o rw,relatime,size=490444k,nr_inodes=122611,mode=755
 #mkdir /dev/pts
 mount -a
 sysctl -w kernel.hotplug=/sbin/mdev > /dev/null
 mdev -s
 for f in /etc/init.d/* ; do
-    [ -x $f ]  && [ ! -d $f ] && log_dbg "Starting $f" && source $f
+    [ -x $f ]  && [ ! -d $f ] && echo "Starting $f" && source $f
 done
 cat /etc/welcome

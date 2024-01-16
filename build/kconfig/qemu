@@ -54,9 +54,8 @@ endif #YALDA_BUILD_QEMU
 
 config YALDA_QEMU_KERNEL_CMDLINE
   string "cmdline"
-  default "nokaslr, console=ttyAMA0" if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
-  default "nokaslr, console=ttyS0, rdinit=/sbin/init" if YALDA_KERNEL_FROM_HOST
-  default "nokaslr, console=ttyS0"
+  default "nokaslr, console=ttyAMA0, rdinit=/sbin/init" if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
+  default "nokaslr, console=ttyS0, rdinit=/sbin/init"
   help
     Kernel command line arguments
 

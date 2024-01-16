@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo $@
-/bin/umount -r host_share
+umount -r host_share
+umount -r home_share
