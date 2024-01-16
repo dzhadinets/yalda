@@ -105,6 +105,5 @@ elif [ -z "$1" ];then
         do_log $CONFIG_YALDA_POSTBUILD_PATH
     fi
 else
-    build_component toolchain
     build_component $@
 fi

@@ -73,8 +73,11 @@ function do_build
                 [ -n "$conf_diff" ] && log_warning "Not all YALDA configs have been applied: \n$conf_diff"
             fi
 #todo replace O= with KBUID_OUTPUT or like that
-            if [[ "$ARCH" == arm64 ]] || [[ "$ARCH" == riscv ]]; then
+#BUG: need another way how to select output image or use uncompressed image everywhere
+            if [[ "$ARCH" == arm64 ]]; then
                 make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+            elif [[ "$ARCH" == riscv ]]; then 
+                make Image -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
             else
                 make bzImage -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
             fi

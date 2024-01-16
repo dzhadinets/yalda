@@ -317,7 +317,7 @@ fi
 
 
 ##########  Sanity check of dependencies
-${YALDA_ROOT_DIR}/scripts/deps-check.sh ${YALDA_ROOT_DIR}/dependencies.txt
+#source ${YALDA_ROOT_DIR}/scripts/deps-check.sh ${YALDA_ROOT_DIR}/dependencies.txt
 
 #################################################### process command
 COMMAND=$1

@@ -10,6 +10,8 @@ set pagination off
 # in most cases we need to debug single thread
 set scheduler-locking on
 
+b start_kernel
+
 # adds temporary breakpoint on module init/exit functions
 b do_init_module
 commands

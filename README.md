@@ -123,6 +123,7 @@ To debug your out-of-tree module
 To debug in-tree modules just launch YALDA with -S parameter in will prevent starting of the kernel
 and will wait till the debugger will be connected. You will have a breakstop on __start_kernel function.
 Then you can add more breakpoint you need and walk through all internals of the greatest OS
+![RICS-V debug](images/debug.gif "YALDA debug")
 
 ### IDE intergration
 You need to enable it in the YALDA's config and tune commandline parameters (at least remote `--tui`).

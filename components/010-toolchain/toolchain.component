@@ -27,6 +27,26 @@ function do_init
             log_error "Toolchain: Unsupported arch: ${YALDA_ARCH}"
         ;;
     esac
+
+    if [ "$CONFIG_YALDA_USE_TOOLCHAIN" == "y" ]; then
+        log_info "Use toolchain from $YALDA_TOOLCHAIN_DIR"
+        if [ ! -d "$YALDA_TOOLCHAIN_DIR/bin" ]; then
+            log_err "Wrong toolchain"
+        fi
+        export PATH=$YALDA_TOOLCHAIN_DIR/bin:$PATH
+    fi
+    if [ -n "$YALDA_ARCH" ];then
+        export ARCH=$YALDA_ARCH
+        export CROSS_COMPILE=${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}
+        log_dbg "ARCH $YALDA_ARCH"
+        if [ "$CONFIG_YALDA_ARCH_64BITS" == "y" ]; then
+            log_dbg "64bit"
+        else
+            log_dbg "32bit"
+             export CFLAGS=-m32
+            export LDFLAGS=-m32
+        fi
+    fi
 }
 
 function do_sync
@@ -47,25 +67,8 @@ function do_sync
 
 function do_build
 {
-    if [ "$CONFIG_YALDA_USE_TOOLCHAIN" == "y" ]; then
-        log_info "Use toolchain from $YALDA_TOOLCHAIN_DIR"
-        if [ ! -d "$YALDA_TOOLCHAIN_DIR/bin" ]; then
-            log_err "Wrong toolchain"
-        fi
-        export PATH=$YALDA_TOOLCHAIN_DIR/bin:$PATH
-    fi
-    export ARCH=$YALDA_ARCH
-    export CROSS_COMPILE=${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}
-    log_dbg "ARCH $YALDA_ARCH"
-    if [ "$CONFIG_YALDA_ARCH_64BITS" == "y" ]; then
-        log_dbg "64bit"
-    else
-        log_dbg "32bit"
-        export CFLAGS=-m32
-        export LDFLAGS=-m32
-    fi
-
     ### here it is must be sanity check of the toolchain
+    return
 }
 
 function do_clean

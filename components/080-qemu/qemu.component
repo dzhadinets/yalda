@@ -111,9 +111,11 @@ function do_build
 
 function make_gdb_init
 {
+    # temporary disable smart break on start
+    if false; then
     if [ "$QEMU_WAIT_UNTIL_DEBUG" == "y" ]; then
         local KERNEL_CONFIG_PATH=$YALDA_KERNEL_BUILD_DIR/.config
-        export PAGING_DONE_ADDR=$($YALDA_ROOT_DIR/components/gdb/get_paging_done_addr.sh \
+        export PAGING_DONE_ADDR=$($YALDA_ROOT_DIR/components/060-gdb/get_paging_done_addr.sh \
             $YALDA_ARCH \
             $YALDA_KERNEL_BUILD_DIR \
             $KERNEL_CONFIG_PATH)
@@ -126,6 +128,9 @@ function make_gdb_init
     else
         GDBINIT_TEMPLATE="$YALDA_ROOT_DIR/components/060-gdb/gdbinit.template"
     fi
+    fi #false
+
+    GDBINIT_TEMPLATE="$YALDA_ROOT_DIR/components/060-gdb/gdbinit.template"
 
     local REMOTE_TARGET="${gdb#tcp\:}"
     export THIS_DIR REMOTE_TARGET
@@ -183,8 +188,8 @@ function qemu_launch
         params+=" -device qemu-xhci,id=xhci"
         params+=" -device usb-host,vendorid=0x1a86" #china debug dongle
         params+=" -device usb-host,vendorid=0x04b4" #softeq debug dongle
-        if [ -z "$YALDA_QEMU_USB_VIDPID" ];then
-            params+=" -device usb-host,$YALDA_QEMU_USB_VIDPID" #china debug dongle
+        if [ -n "$CONFIG_YALDA_QEMU_USB_VIDPID" ];then
+            params+=" -device usb-host,$CONFIG_YALDA_QEMU_USB_VIDPID" #china debug dongle
         fi
     fi
 
