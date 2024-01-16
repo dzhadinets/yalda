@@ -15,7 +15,7 @@ choice
     Source of busybox tree (url | git | dir)
 
 config YALDA_BUSYBOX_FROM_URL
-  bool "url"
+  bool "url to archive"
 
 config YALDA_BUSYBOX_FROM_GIT
   bool "git"

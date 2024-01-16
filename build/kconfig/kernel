@@ -2,6 +2,7 @@ menu "Kernel"
 
 choice
   prompt "Source"
+  default YALDA_KERNEL_FROM_URL
   help
     Source of kernel tree (url | git | dir | host (if ARCH is host))
 

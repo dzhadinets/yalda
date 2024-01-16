@@ -14,10 +14,12 @@ virtual environment where you can have a fun for the developing but not a config
 ## Prepare environment
 YALDA checks all required dependencies basing on the configuration of your build. YALDA utilizes KConfig approach
 of self configuration and as a front-end for the user
+
 Ubuntu:
 ```bash
 $ sudo apt install kconfig-frontends
 ```
+
 Others distros can use:
 ```bash
 $ git clone https://github.com/jameswalmsley/kconfig-frontends
@@ -27,6 +29,7 @@ $ ./configure
 $ make -j$(nproc)
 $ sudo make install
 ```
+
 It is written in BASH so it assumes that bash is installed.
 
 ## Installation
@@ -45,6 +48,7 @@ with the path to the module. ie (not taking into account if you are using specif
 ```bash
 $ make -C $(PATH_TO_YOUR_KERNEL) M=$(PATH_TO_YOUR_MODULE) modules "$(ADDITIONAL_FLAGS)"
 ```
+
 YALDA simplify this call by calling
 ```bash
 $ yalda "$(ADDITIONAL_FLAGS)"
@@ -69,8 +73,8 @@ $ yalda config
 ```
 ![RICS-V configuration](images/config.gif "YALDA configuration")
 
-Finally it creates .yalda directory and generates config file there with is used to get and build all sources and prepares environment.
-In order to configure YALDA globally call configuration inside YALDA's sources directory. The calling of the configuration in
+Finally it creates .yalda directory and generates config file there which is used to get and build all sources and prepares environment.
+In order to configure YALDA globally: call configuration inside YALDA's sources directory. The calling of the configuration in
 other places will create a local project config and an environment.
 The system consist of components and some of them may have own configuration, ie: kernel or busybox. You can call
 specific configuration by passing component name as a parameter
@@ -117,16 +121,16 @@ To debug your out-of-tree module
 - build your module within the environment
 - add breakpoint ```b do_init_module```
 - load symbols ```lx-symbols <PATH TO THE MODULE>```
-- add breakpoint to you module functions. (make sure __init attribute is not used for your module init function)
+- add breakpoint to your module functions. (make sure __init attribute is not used for your module init function)
 - enjoy
 
-To debug in-tree modules just launch YALDA with -S parameter in will prevent starting of the kernel
-and will wait till the debugger will be connected. You will have a breakstop on __start_kernel function.
+To debug in-tree modules just launch YALDA with -S parameter. It will prevent starting of the kernel
+and will wait till the debugger will be connected. You will have a breakstop on start_kernel function.
 Then you can add more breakpoint you need and walk through all internals of the greatest OS
 ![RICS-V debug](images/debug.gif "YALDA debug")
 
 ### IDE intergration
-You need to enable it in the YALDA's config and tune commandline parameters (at least remote `--tui`).
+You need to enable it in the YALDA's config and tune commandline parameters (at least remove `--tui`).
 Use command like to prevent conflicts with YALDA's logs
 ```bash
 yalda --silent debug
@@ -160,12 +164,9 @@ See scripts. It is easy
 Useful things:
 - it mounts ./ path to /mnt/share inside QEMU
 - it uses .yalda dir and mounts it to /home and set it as $HOME
-- by default YALDA tries to utilize all power you dev-station has. in order to limit it pass `-c <CPUS>` as an argument
-- 
+- by default YALDA tries to utilize all power that your dev-station has. In order to limit it pass `-c <CPUS>` as an argument
 - in order to exit from QEMU use ctrl-a-x
 
 ## Known issues
-- shutdown does not halt qemu. use ctrl-a-x
 - Dependencies are not checked correctly and it leads to errors. will be reimplemented
 - host kernel usage is unusable for now
-
