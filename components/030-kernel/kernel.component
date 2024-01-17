@@ -72,7 +72,7 @@ function do_build
                 local conf_diff="`./scripts/diffconfig "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config" | grep "+"`"
                 [ -n "$conf_diff" ] && log_warning "Not all YALDA configs have been applied: \n$conf_diff"
             fi
-#todo replace O= with KBUID_OUTPUT or like that
+#todo replace O= with KBUILD_OUTPUT or like that
 #BUG: need another way how to select output image or use uncompressed image everywhere
             if [[ "$ARCH" == arm64 ]]; then
                 make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
@@ -102,6 +102,7 @@ function do_build
 
 function do_clean
 {
+    log_info "Kernel clean"
     if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" == "y" ]; then
         rm -f "$YALDA_WORKDIR/kernel.image"
     else

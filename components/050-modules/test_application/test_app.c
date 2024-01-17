@@ -10,8 +10,11 @@
 #define WR_VALUE _IOW('a','a',u_int64_t*)
 #define RD_VALUE _IOR('a','b',u_int64_t*)
 
+#include "fn.h"
+
 int main()
 {
+        return fn();
 	int fd;
 	u_int64_t value, number;
 	printf("\nOpening Driver\n");

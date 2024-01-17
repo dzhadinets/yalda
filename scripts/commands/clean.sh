@@ -26,6 +26,5 @@ elif [ -z "$1" ];then
     done
     clean_initrd
 else
-    shift
     clean_component $@
 fi

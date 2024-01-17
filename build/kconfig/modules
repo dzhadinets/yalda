@@ -1,5 +1,11 @@
 menu Modules
 
+config YALDA_BUILD_SIMPLE_INITRD
+  bool "Build simplest initrd"
+  default n
+  help
+    Build and install YALDA simplest initrd. Make sure you've selected rdinit=init in kernel cmdline
+
 config YALDA_BUILD_EXAMPLE_MODULE
   bool "Build example module"
   default n

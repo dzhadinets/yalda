@@ -1,5 +1,12 @@
-APP_CC		= $(CROSS_COMPILE)gcc
-APP_LD		= $(CROSS_COMPILE)ld
+APP_CC = $(CROSS_COMPILE)gcc
+APP_LD = $(CROSS_COMPILE)ld
+
+ifeq ($(BUILD_DIR),)
+BUILD_DIR := $(PWD)
+else
+BUILD_DIR := $(shell realpath $(BUILD_DIR))
+$(info Custom build dir $(BUILD_DIR))
+endif
 
 APP_WARNFLAGS=-Wall -Wno-unused-function -Wno-unused-variable
 APP_CFLAGS+= $(call cc-option,-O3,-O1) ${APP_WARNFLAGS} -g -DDEBUG
@@ -9,26 +16,18 @@ APP_CFLAGS+= $(call cc-option,-O3,-O1) ${APP_WARNFLAGS} -g -DDEBUG
 APP_CFLAGS+= -static
 
 APP_TARGET=yalda_app
-APP_SRCS=test_app.c
+APP_SRCS=test_app.c fn.c
 APP_OBJS=$(APP_SRCS:.c=.o)
 
-test_make: $(APP_OBJS)
-	$(APP_CC) $(APP_CFLAGS) -o $(APP_TARGET) $(APP_OBJS)
-
 .c.o:
-	$(APP_CC) $(APP_CFLAGS) -c $< -o $@
+	@$(APP_CC) $(APP_CFLAGS) -c $< -o $(BUILD_DIR)/$@
 
-test_clean:
-	rm -f $(APP_TARGET) $(APP_OBJS)
+all: $(APP_OBJS)
+	@cd $(BUILD_DIR); $(APP_CC) $(APP_CFLAGS) -o $(APP_TARGET) $(APP_OBJS)
 
-.PHONY: all clean install uninstall
+clean:
+	@rm -rf $(BUILD_DIR)
 
-all: test_make
-
-clean: test_clean
-
+.PHONY: install
 install:
-	cp "$(APP_TARGET)" "$(INSTALL_MOD_PATH)/usr/bin/"
-
-uninstall:
-	rm -f "$(INSTALL_MOD_PATH)/usr/bin/$(APP_TARGET)"
+	@cd $(BUILD_DIR); cp "$(APP_TARGET)" "$(INSTALL_PATH)/usr/bin/"
