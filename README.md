@@ -115,6 +115,84 @@ $ yalda build --initrd
 ```
 the `tinyconfig` is used as the default config the kernel
 
+## Build your module
+As was mentioned YALDA simplifies complex call of building your module. Internally it calls
+```bash
+$ KDIR=<path to the kernel build> INSTALL_PATH=<path to rootfs>` make -C <your dir> <other arguments from yalda's call>
+```
+Moreover it prepares toolchain and platform environment for your project
+So you can design you makefile such way to add as much targets as you need.
+Basic skeleton for new module could be following
+```
+├── Makefile
+└── module
+    ├── hello.c
+    └── Makefile
+```
+Makefile
+```make
+SRC=$(realpath module)
+
+ifeq ($(KDIR),)
+KDIR := $(shell echo /lib/modules/`uname -r`/build)
+else
+$(info Custom linux from $(KDIR))
+endif
+
+all:
+	$(MAKE) -C $(KDIR) M=$(SRC) modules
+
+install:
+	INSTALL_MOD_PATH=$(INSTALL_PATH) $(MAKE) -C $(KDIR) M=$(SRC) modules_install
+
+clean:
+	$(MAKE) -C $(KDIR) M=$(SRC) clean
+
+```
+module/Makefile
+```make
+obj-m := hello.o
+```
+module/hello.c
+```c
+#include <linux/module.h>
+int init_module(void)
+{
+	printk("Hello YALDA!\n");
+	return 0;
+}
+void cleanup_module(void)
+{
+	printk("Goodbye YALDA!\n");
+}
+MODULE_LICENSE("GPL");
+```
+The same way you can add any other subdirectories.
+If you would like using same-dir makefile you can use combined makefile or kbuild
+https://docs.kernel.org/kbuild/makefiles.html
+```make
+ifneq ($(KERNELRELEASE),)
+obj-m := hello.o
+else
+SRC=$(PWD)
+
+ifeq ($(KDIR),)
+KDIR := $(shell echo /lib/modules/`uname -r`/build)
+else
+$(info Custom linux from $(KDIR))
+endif
+
+all:
+	$(MAKE) -C $(KDIR) M=$(SRC) modules
+
+install:
+	INSTALL_MOD_PATH=$(INSTALL_PATH) $(MAKE) -C $(KDIR) M=$(SRC) modules_install
+
+clean:
+	$(MAKE) -C $(KDIR) M=$(SRC) clean
+endif
+```
+
 ## Debug
 To debug your out-of-tree module
 - configure and build YALDA
@@ -168,5 +246,6 @@ Useful things:
 - in order to exit from QEMU use ctrl-a-x
 
 ## Known issues
-- Dependencies are not checked correctly and it leads to errors. will be reimplemented
+- Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
+- UDD module does not links to stable build
 - host kernel usage is unusable for now

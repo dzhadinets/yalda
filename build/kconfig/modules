@@ -5,24 +5,32 @@ config YALDA_BUILD_SIMPLE_INITRD
   default n
   help
     Build and install YALDA simplest initrd. Make sure you've selected rdinit=init in kernel cmdline
+    Useful when you are debugging kernel itself or bootloader
 
 config YALDA_BUILD_EXAMPLE_MODULE
   bool "Build example module"
   default n
   help
-    Build and install YALDA example module
+    Build and install YALDA example module where combined all common kernel module user interfaces
 
 config YALDA_BUILD_EXAMPLE_APPLAICTION
   bool "Build test application for userspace"
   depends on YALDA_BUILD_EXAMPLE_MODULE
   default n
   help
-    Build and install test application for userspace
+    Build and install test application for userspace to test example module
 
-config YALDA_BUILD_UDD
-  bool "Build the driver for USB Debug Dongle (not implemented)"
+config YALDA_BUILD_DEMO_MODULE
+  bool "Build Demo module"
   default n
   help
-    Build driver for (https://gitlab/dzhadinets/usb-debug-dongle.git)
+    Build and install YALDA demo module. It was developed using YALDA with UDD for dfr1602rgb display
+    The module creates char device and can be used from userspace through it ana sysfs. See demo.sh
+
+#config YALDA_BUILD_UDD
+#  bool "Build the driver for USB Debug Dongle (UDD)"
+#  default n
+#  help
+#    Build driver for (https://gitlab/dzhadinets/usb-debug-dongle.git)
 
 endmenu

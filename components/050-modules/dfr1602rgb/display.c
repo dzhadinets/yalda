@@ -1,6 +1,7 @@
 #include "display.h"
 #include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/version.h>
 
 static struct i2c_adapter *i2c_adapter = NULL;
 static struct i2c_client *i2c_lcd = NULL;
@@ -13,16 +14,26 @@ static void rgb_set_reg(u8 reg, u8 value);
 static void lcd_command(u8 cmd);
 static void lcd_write(u8 data);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 static int display_i2c_probe(struct i2c_client *client,
 			     const struct i2c_device_id *id);
+#else
+static int display_i2c_probe(struct i2c_client *client);
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 static int display_i2c_remove(struct i2c_client *client);
+#else
+static void display_i2c_remove(struct i2c_client *client);
+#endif
 
 #define DRIVER_NAME "dfr1602rgb"
 #define SLAVE_NAME_LCD DRIVER_NAME "_lcd"
 #define SLAVE_NAME_RGB DRIVER_NAME "_rgb"
 
-enum { DFR_LCD,
-       DFR_RGB,
+enum {
+	DFR_LCD,
+	DFR_RGB,
 };
 
 /*
@@ -74,8 +85,12 @@ void display_deinit(void)
 	i2c_del_driver(&i2c_driver);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 static int display_i2c_probe(struct i2c_client *client,
 			     const struct i2c_device_id *id)
+#else
+static int display_i2c_probe(struct i2c_client *client)
+#endif
 {
 	if (client->addr == LCD_ADDRESS) {
 		///< this is according to the hitachi HD44780 datasheet
@@ -123,7 +138,11 @@ static int display_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 static int display_i2c_remove(struct i2c_client *client)
+#else
+static void display_i2c_remove(struct i2c_client *client)
+#endif
 {
 	if (client->addr == LCD_ADDRESS) {
 		display_clear();
@@ -131,7 +150,9 @@ static int display_i2c_remove(struct i2c_client *client)
 	} else if (client->addr == RGB_ADDRESS) {
 		display_set_color(0);
 	}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 	return 0;
+#endif
 }
 
 void display_clear()

@@ -20,6 +20,10 @@ function do_init
     if [ "$CONFIG_YALDA_BUILD_EXAMPLE_APPLAICTION" == "y" ]; then
         component_list+=("test_application")
     fi
+
+    if [ "$CONFIG_YALDA_BUILD_DEMO_MODULE" == "y" ]; then
+        component_list+=("dfr1602rgb")
+    fi
 }
 
 function do_sync
@@ -43,8 +47,8 @@ function do_build
     if [ "$CONFIG_YALDA_BUILD_UDD" == "y" ]; then
         log_info "build for UDD"
         mkdir -p "$YALDA_MODULES_BUILD_DIR/udd"
-        pushd "${YALDA_MODULES_UDD_SRC_DIR}/kernel_module " >/dev/null
-        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/udd" KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR"  make $@
+        pushd "${YALDA_MODULES_UDD_SRC_DIR}/kernel_module" >/dev/null
+        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/udd" KERNEL_DIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR"  make $@
         popd >/dev/null
     fi
 }

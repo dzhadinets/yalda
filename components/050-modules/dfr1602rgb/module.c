@@ -2,6 +2,7 @@
 
 #include "display.h"
 
+#include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/module.h>
@@ -181,8 +182,13 @@ static int
 	}
 
 	/*Creating struct class*/
-	if ((dev_class = class_create(THIS_MODULE, "dfr1602rgb_class")) ==
-	    NULL) {
+	if (
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
+		(dev_class = class_create(THIS_MODULE, "dfr1602rgb_class")
+#else
+		(dev_class = class_create("dfr1602rgb_class")
+#endif
+			 ) == NULL) {
 		pr_info("Cannot create the struct class\n");
 		goto r_class;
 	}

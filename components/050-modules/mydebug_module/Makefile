@@ -8,7 +8,6 @@ ifeq ($(BUILD_DIR),)
 BUILD_DIR := $(PWD)
 else
 BUILD_DIR := $(shell realpath $(BUILD_DIR))
-$(info Custom build dir $(BUILD_DIR))
 endif
 
 ifeq ($(KDIR),)

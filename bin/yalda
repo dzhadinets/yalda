@@ -326,7 +326,6 @@ if [ -n "$COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh" ];
     shift
     source ${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh
 else
-#    [ -f "$YALDA_KERNEL_BUILD_DIR/.config" ] || log_error "Kernel build is not found at \"$YALDA_KERNEL_BUILD_DIR\". Try '$(basename $0) build --all'"
     log_info "Start building in $THIS_DIR for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion) from $YALDA_KERNEL_BUILD_DIR"
-    make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" $@
+    make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" $@
 fi
