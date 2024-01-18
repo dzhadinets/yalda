@@ -51,10 +51,14 @@ function do_build
                 make qemu-x86_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
             elif [ "${ARCH}" == "x86_64" ]; then
                 make qemu-x86_64_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+            elif [ "${ARCH}" == "riscv" ]; then
+                make qemu-riscv64_defconfig O="$YALDA_UBOOT_BUILD_DIR" >/dev/null
+            else
+                log_error "UBoot: unknown ARCH $ARCH"
             fi
         fi
 
-        make -j$YALDA_NPROC O="$YALDA_UBOOT_BUILD_DIR"
+        make -j$YALDA_NPROC O="$YALDA_UBOOT_BUILD_DIR" $@
         popd >/dev/null
     fi
 }

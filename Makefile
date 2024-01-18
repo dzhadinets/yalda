@@ -4,7 +4,7 @@ YALDA_BIN=${PWD}/bin/yalda
 all:
 	${YALDA_BIN} config
 	${YALDA_BIN} sync
-	${YALDA_BIN} build --all
+	${YALDA_BIN} build
 
 .PHONY: help
 help:

@@ -74,23 +74,20 @@ function call_help
     echo "  -c|--cpu=<AMOUNT>                  	- limit cpus"
     echo "The following are valid commands:"
     echo "  sync  [<components>]               	- sync sources and check it is up to date"
-    echo "  build [<components>|<build_params>]	- build curent dir for YALDA"
+    echo "  build [<components>|--initrd]      	- build everithing or specific component or init ram disk"
     echo "  config [<components>]              	- without params runs YALDA configuration"
     echo "  run <run_params>                   	- launch YALDA"
-    echo "  clean [<components>|<build_params>]	- clean YALDA in the curent dir"
+    echo "  clean [<components>]               	- clean YALDA in the curent dir"
     echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
     echo "  ci                                 	- Build and test all predefined configs"
     echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
     echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
     echo "                                     	- else adds \"scenario\" into predefined list of scenarion"
+    echo "  --                                 	- means end of common arguments and not commands, everything to make current dir"
     echo "  <components>                       	- components:"
     while IFS= read -r file; do
         echo  "    $(basename $file $YALDA_COMPONENT_EXT)                      	- ${file#$YALDA_ROOT_DIR}"
     done < <(find $YALDA_ROOT_DIR/components/  -name "*$YALDA_COMPONENT_EXT" -print | sort)
-    echo "  <build_params>                     	- pass additional arguments to build component (ie to 'make' command)"
-    echo "    --all                            	- build all Yalda component"
-    echo "    --initrd                         	- build initrd"
-    echo "    <target>                         	- run Makefile in  current folder with parameters \"target\" (ie 'clear')"
     echo "  <run_params>                       	- YALDA launch parameters"
     echo "    --gui                            	- launch QEMU with SDL"
     echo "    --gdb <gdb_out>                  	- launch gdbserver with output to gdbout (default: tcp::1234)"
@@ -162,7 +159,14 @@ function do_log
     fi
 }
 
-while getopts ':hsV-:c:' OPT; do
+# means that everything after -- should be passed to make call
+if [ -n "$(echo $* | grep -F -w -- '--')" ];then
+    ESCAPE_CMD=true
+else
+    ESCAPE_CMD=false
+fi
+
+while getopts :hV-:c:s OPT; do
     # support long options: https://stackoverflow.com/a/28466267/519360
     if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
         OPT="${OPTARG%%=*}"       # extract long option name
@@ -203,6 +207,13 @@ while getopts ':hsV-:c:' OPT; do
         ;;
     esac
 done
+
+#getopts exits if it see '-' or '+something". what to do with it ? Now it will be passed to make call
+#ARGS=($@)
+#if [[ "${ARGS[$((OPTIND-1))]}" =~ ^[+-].* ]];then
+#   log_error "Unknown parameters set ${ARGS[$((OPTIND-1))]}. See help"
+#fi
+
 shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
 log_info "Workdir: $YALDA_WORKDIR"
@@ -236,15 +247,6 @@ if [ -r "$CONFIG_PATH" ];then
     else
         YALDA_ARCH=${CONFIG_YALDA_ARCH}
     fi
-
-# attempt to remove toolchain.file
-#    if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" != "y" ]; then
-#        set -o allexport
-#        source "$YALDA_ROOT_DIR/build/arch/$YALDA_ARCH/toolchain.env"
-#        set +o allexport
-#    fi
-#    log_dbg "ARCH $YALDA_ARCH"
-#    log_dbg "Toolchain info:\n$(cat $YALDA_ROOT_DIR/build/arch/$YALDA_ARCH/toolchain.env)"
 
     YALDA_INITRD="$YALDA_WORKDIR/$CONFIG_YALDA_INITRD"
 
@@ -315,14 +317,16 @@ elif [ "$1" != "config" ];then
     log_error "launch $(basename $0) config first in $(cd $YALDA_WORKDIR/.. && pwd) to create at least default configuration"
 fi
 
-
 ##########  Sanity check of dependencies
 #source ${YALDA_ROOT_DIR}/scripts/deps-check.sh ${YALDA_ROOT_DIR}/dependencies.txt
 
 #################################################### process command
+# examples:
+# $ yalda              - will be passed to make
+# $ yalda clean        - will call YALDA's clean command
+# $ yalda -- clean     - will be passed to make as clean
 COMMAND=$1
-
-if [ -n "$COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh" ]; then
+if ! ${ESCAPE_CMD} && [ -n "$COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh" ]; then
     shift
     source ${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh
 else

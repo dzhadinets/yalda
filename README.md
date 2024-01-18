@@ -249,3 +249,5 @@ Useful things:
 - Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
 - UDD module does not links to stable build
 - host kernel usage is unusable for now
+- Bootloader does not have ready-to-go configuration. TBD
+- QEMU default "bios" for riscv (OpenSBI) does not load compressed Kernel image (Image.gz). Symlink .yalda/kernel.image should be relinked to ../Image

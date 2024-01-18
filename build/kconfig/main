@@ -56,7 +56,7 @@ menu "Components"
 
 source toolchain
 #temporary do not support not ARM architecture
-if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
+if YALDA_ARCH_ARM || YALDA_ARCH_ARM64 || YALDA_ARCH_RISCV
   source uboot
 endif
 source kernel

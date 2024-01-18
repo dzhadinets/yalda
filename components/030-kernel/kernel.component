@@ -74,22 +74,23 @@ function do_build
             fi
 #todo replace O= with KBUILD_OUTPUT or like that
 #BUG: need another way how to select output image or use uncompressed image everywhere
-            if [[ "$ARCH" == arm64 ]]; then
-                make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-            elif [[ "$ARCH" == riscv ]]; then 
-                make Image -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-            else
-                make bzImage -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-            fi
+#            if [[ "$ARCH" == arm64 ]]; then
+#                make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+#            elif [[ "$ARCH" == riscv ]]; then 
+#                make Image -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+#            else
+#                make bzImage -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+#            fi
+            make all -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
 
             make modules_prepare O="$YALDA_KERNEL_BUILD_DIR"
-            make modules -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
+#            make modules -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
             make modules_install INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" O="$YALDA_KERNEL_BUILD_DIR"
             make scripts_gdb -j$(nproc) O="$YALDA_KERNEL_BUILD_DIR"
 
-            if [[ "$ARCH" =~ ^arm ]]; then
+#            if [[ "$ARCH" =~ ^arm ]]; then
                 make dtbs O="$YALDA_KERNEL_BUILD_DIR"
-            fi
+#            fi
             local kernel_path=$(make -s image_name O="$YALDA_KERNEL_BUILD_DIR")
             ln -sf "$YALDA_KERNEL_BUILD_DIR/$kernel_path" "$YALDA_WORKDIR/kernel.image"
         else
