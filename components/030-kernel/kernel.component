@@ -88,9 +88,10 @@ function do_build
             make modules_install INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" O="$YALDA_KERNEL_BUILD_DIR"
             make scripts_gdb -j$(nproc) O="$YALDA_KERNEL_BUILD_DIR"
 
-#            if [[ "$ARCH" =~ ^arm ]]; then
+            if [[ ! "$ARCH" =~ ^x86 ]]; then
                 make dtbs O="$YALDA_KERNEL_BUILD_DIR"
-#            fi
+            fi
+
             local kernel_path=$(make -s image_name O="$YALDA_KERNEL_BUILD_DIR")
             ln -sf "$YALDA_KERNEL_BUILD_DIR/$kernel_path" "$YALDA_WORKDIR/kernel.image"
         else
