@@ -58,14 +58,21 @@ function do_build
         local kernel_version="$(make -s kernelversion)"
         log_info "Building kernel version $kernel_version"
         if [ $# -eq 0 ];then
-            if [ ! -r "$YALDA_KERNEL_BUILD_DIR/.config" ];then
+            if [ ! -r "$YALDA_KERNEL_BUILD_DIR/.config" ]; then
                 if [ "$CONFIG_YALDA_KERNEL_PATCH" == "y" ]; then
                     local patches_path="$(realpath $(dirname $BASH_SOURCE)/patches)"
                     local series_path=$(get_series_for_version $kernel_version $patches_path)
                     log_info "Series file for quilt: [ $series_path ]"
                     QUILT_PATCHES=$patches_path QUILT_SERIES=$series_path quilt push -av || true
                 fi
-                make $CONFIG_YALDA_KERNEL_BASE_CONFIG O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                #if we set a real file as a base confir then just use it 
+                if [ -r $CONFIG_YALDA_KERNEL_BASE_CONFIG ]; then
+#                    make defconfig O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                    cp $CONFIG_YALDA_KERNEL_BASE_CONFIG $YALDA_KERNEL_BUILD_DIR/.config
+#                    make oldconfig O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                else
+                    make $CONFIG_YALDA_KERNEL_BASE_CONFIG O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                fi
                 local yalda_config="$(realpath $(dirname $BASH_SOURCE))/yalda.config"
                 ./scripts/kconfig/merge_config.sh -m -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "${YALDA_ROOT_DIR}/build/arch/${ARCH}/kernel.config"> $YALDA_KERNEL_BUILD_DIR/merge1.log
                 ./scripts/kconfig/merge_config.sh -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config"> $YALDA_KERNEL_BUILD_DIR/merge2.log

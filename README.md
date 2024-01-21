@@ -245,9 +245,22 @@ Useful things:
 - by default YALDA tries to utilize all power that your dev-station has. In order to limit it pass `-c <CPUS>` as an argument
 - in order to exit from QEMU use ctrl-a-x
 
+## Long story short
+Here are stories of demo build/debug sessions about:
+- [Yocto](story_yocto.md) - build and debug YOCTO for RaspberryPi
+- [Raspbian](story_raspbian.md) - build and debug Demo module within Raspbian environment
+- TBD: [AOSP](story_aosp.md) - build and debug AOSP for OrangePi
+- TBD: [Buildroot](story_buildroot.md) - build and debug Buildroot for Pine64 Ox64
+- TBD: [Custom RISCV](story_riscv.md) - build and debug linux from scratch for Pine64 Ox64
+- TBD: [Host](story_host.md) - build and debug Demo module using host kernel
+- TBD: [UDD](story_udd.md) - debugging of [Universal debug dongle]()
+
 ## Known issues
 - Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
-- UDD module does not links to stable build
+- UDD module does not links to stable build. have a fun
 - host kernel usage is unusable for now
 - Bootloader does not have ready-to-go configuration. TBD
 - QEMU default "bios" for riscv (OpenSBI) does not load compressed Kernel image (Image.gz). Symlink .yalda/kernel.image should be relinked to ../Image
+- Stories need to be fixed
+- test does not work correctly
+- ci loop does not work

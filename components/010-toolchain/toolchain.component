@@ -39,11 +39,12 @@ function do_init
         export ARCH=$YALDA_ARCH
         export CROSS_COMPILE=${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}
         log_dbg "ARCH $YALDA_ARCH"
+        log_dbg "CROSS_COMPILE $CROSS_COMPILE"
         if [ "$CONFIG_YALDA_ARCH_64BITS" == "y" ]; then
             log_dbg "64bit"
         else
             log_dbg "32bit"
-             export CFLAGS=-m32
+            export CFLAGS=-m32
             export LDFLAGS=-m32
         fi
     fi

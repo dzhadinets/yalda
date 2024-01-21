@@ -36,9 +36,14 @@ config YALDA_TOOLCHAIN_DIR
   string "Toolchain workdir"
   default "build/toolchain" if ! YALDA_TOOLCHAIN_FROM_DIR
 
+endif #YALDA_BUILD_TOOLCHAIN
+
 config YALDA_TOOLCHAIN_CROSS_PREFIX
   string "Toolchain crosscompillaton prefix"
-
-endif #YALDA_BUILD_TOOLCHAIN
+  default "arm-linux-gnueabihf-" if YALDA_ARCH_ARM
+  default "aarch64-linux-gnu-" if YALDA_ARCH_ARM64
+  default "" if YALDA_ARCH_X86
+  default "" if YALDA_ARCH_X8664
+  default "riscv64-linux-gnu-" if YALDA_ARCH_RISCV
 
 endmenu

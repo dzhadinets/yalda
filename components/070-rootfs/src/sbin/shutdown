@@ -1,4 +1,4 @@
 #!/bin/sh
 
-umount -r host_share
-umount -r home_share
+umount -r /mnt/share
+umount -r /home

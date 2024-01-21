@@ -79,6 +79,7 @@ function call_help
     echo "  run <run_params>                   	- launch YALDA"
     echo "  clean [<components>]               	- clean YALDA in the curent dir"
     echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
+    echo "  code-format                        	- Reformat your code recusevely using Kernel .clang-format file"
     echo "  ci                                 	- Build and test all predefined configs"
     echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
     echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
