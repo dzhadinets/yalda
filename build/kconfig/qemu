@@ -61,7 +61,7 @@ config YALDA_QEMU_KERNEL_CMDLINE
 
 config YALDA_QEMU_DTB_PATH
   string "dtb"
-  depends on YALDA_ARCH_ARM
+  depends on ! YALDA_ARCH_X86 && ! YALDA_ARCH_X86_64
   default ""
   help
     Path to Device Tree Blob (dtb) file

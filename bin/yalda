@@ -302,6 +302,8 @@ if [ -r "$CONFIG_PATH" ];then
     YALDA_UBOOT_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_UBOOT_BUILD_DIR"
     do_log mkdir -p "$YALDA_UBOOT_BUILD_DIR"
 ##########  Components initialization
+YALDA_COMMAND=$1
+
 for component in ${YALDA_COMPONENTS_ORDER[@]}; do
     log_dbg "Init component $component"
     unset -f do_init
@@ -326,10 +328,9 @@ fi
 # $ yalda              - will be passed to make
 # $ yalda clean        - will call YALDA's clean command
 # $ yalda -- clean     - will be passed to make as clean
-COMMAND=$1
-if ! ${ESCAPE_CMD} && [ -n "$COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh" ]; then
+if ! ${ESCAPE_CMD} && [ -n "$YALDA_COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts/commands/$YALDA_COMMAND.sh" ]; then
     shift
-    source ${YALDA_ROOT_DIR}/scripts/commands/$COMMAND.sh
+    source ${YALDA_ROOT_DIR}/scripts/commands/$YALDA_COMMAND.sh
 else
     log_info "Start building in $THIS_DIR for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion) from $YALDA_KERNEL_BUILD_DIR"
     make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" $@

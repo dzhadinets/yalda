@@ -32,6 +32,7 @@ function do_sync
 function do_build
 {
     if [ "$CONFIG_YALDA_BUILD_UBOOT" == "y" ]; then
+        [ -d "$YALDA_UBOOT_SOURCE_DIR" ] || log_error "Synchronize uboot"
         pushd "$YALDA_UBOOT_SOURCE_DIR" >/dev/null
         log_info "U-boot version $(make ubootversion)"
         if [ ! -r "$YALDA_UBOOT_BUILD_DIR/.config" ];then

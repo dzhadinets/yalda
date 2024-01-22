@@ -54,6 +54,7 @@ function do_sync
 function do_build
 {
     if [ "$CONFIG_YALDA_KERNEL_FROM_HOST" != "y" ]; then
+        [ -d "$YALDA_KERNEL_SOURCE_DIR" ] || log_error "Synchronize kernel"
         pushd "$YALDA_KERNEL_SOURCE_DIR" >/dev/null
         local kernel_version="$(make -s kernelversion)"
         log_info "Building kernel version $kernel_version"

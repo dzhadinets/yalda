@@ -4,6 +4,8 @@ The main thing that YALDA does is automatically prepare an environment for devel
 (version, toolchain, architecture, and config of the kernel) with ability to launch it and debug the kernel
 in the real time.
 
+[TOC]
+
 ## Motivation
 When you are in a brand new board bring-up it is usually required to develop or tune Linux kernel modules.
 The main issue is that to debug it on a remote environment it is required to setup specific set of hardware
@@ -254,6 +256,7 @@ Here are stories of demo build/debug sessions about:
 - TBD: [Custom RISCV](story_riscv.md) - build and debug linux from scratch for Pine64 Ox64
 - TBD: [Host](story_host.md) - build and debug Demo module using host kernel
 - TBD: [UDD](story_udd.md) - debugging of [Universal debug dongle]()
+- TBD: [IDE integration](story_ide.md) - debugging using Emacs and VScode
 
 ## Known issues
 - Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
@@ -264,3 +267,5 @@ Here are stories of demo build/debug sessions about:
 - Stories need to be fixed
 - test does not work correctly
 - ci loop does not work
+- I decided to move from base kernel tinyconfig to defconfig. Image is bigger but it is much easear adding new architectures.
+  But yalda.config and arch configs are dirty now

@@ -35,6 +35,7 @@ function do_sync
 function do_build
 {
     if [ "$CONFIG_YALDA_BUILD_BUSYBOX" == "y" ]; then
+        [ -d "$YALDA_BUSYBOX_SOURCE_DIR" ] || log_error "Synchronize busybox"
         pushd "$YALDA_BUSYBOX_SOURCE_DIR" >/dev/null
         local kernel_version="$(make -s kernelversion)"
         log_info "Busybox version $kernel_version"

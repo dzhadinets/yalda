@@ -109,7 +109,7 @@ config YALDA_KERNEL_ADDITIONAL_CONFIG
 
 config YALDA_KERNEL_BASE_CONFIG
   string "Base kernel config"
-  default "tinyconfig"
+  default "defconfig"
 
 config YALDA_KERNEL_CONFIG_PATH
   string "Custom config path"
