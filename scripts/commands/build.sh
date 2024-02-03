@@ -70,14 +70,6 @@ get_series_for_version()
     echo "$series_file_for_this_version"
 }
 
-function build_initrd
-{
-    log_info "Building InitRamDisk at $YALDA_INITRD"
-    pushd "$YALDA_OUTPUT_DIR" >/dev/null
-    find . -print0 | cpio --null -ov --format=newc 2>/dev/null | gzip > "$YALDA_INITRD"
-    popd >/dev/null
-}
-
 function build_component
 {
     local component=$1
@@ -91,7 +83,7 @@ function build_component
 }
 
 if [ "$1" == "--initrd" ];then
-    build_initrd
+    source "${YALDA_ROOT_DIR}/scripts/commands/initrd.sh"
 elif [ -z "$1" ];then
     if [ -z "$CONFIG_YALDA_PREBUILD_PATH" ]; then
         do_log $CONFIG_YALDA_PREBUILD_PATH
@@ -100,7 +92,7 @@ elif [ -z "$1" ];then
         log_info "Building component $component"
         build_component $component
     done
-    build_initrd
+    source "${YALDA_ROOT_DIR}/scripts/commands/initrd.sh"
     if [ -z "$CONFIG_YALDA_POSTBUILD_PATH" ]; then
         do_log $CONFIG_YALDA_POSTBUILD_PATH
     fi
