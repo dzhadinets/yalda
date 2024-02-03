@@ -52,8 +52,12 @@ config YALDA_QEMU_PATCH
 
 endif #YALDA_BUILD_QEMU
 
+config YALDA_QEMU_CPUS
+  int "Amount of CPUs"
+  range 1 8
+
 config YALDA_QEMU_KERNEL_CMDLINE
-  string "cmdline"
+  string "Kernel cmdline"
   default "nokaslr, console=ttyAMA0, rdinit=/sbin/init" if YALDA_ARCH_ARM || YALDA_ARCH_ARM64
   default "nokaslr, console=ttyS0, rdinit=/sbin/init"
   help

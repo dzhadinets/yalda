@@ -13,10 +13,10 @@ function do_init
             qemu_bin="qemu-system-x86_64"
         ;;
         arm)
-            qemu_bin="qemu-system-arm -M virt,highmem=off -cpu cortex-a7 -smp 4"
+            qemu_bin="qemu-system-arm -M virt,highmem=off -cpu cortex-a7"
         ;;
         arm64)
-            qemu_bin="qemu-system-aarch64 -M virt,highmem=off -cpu cortex-a53 -smp 4"
+            qemu_bin="qemu-system-aarch64 -M virt,highmem=off -cpu cortex-a53"
         ;;
         riscv)
             qemu_bin="qemu-system-riscv64 -M virt"
@@ -25,6 +25,7 @@ function do_init
             log_error "QEMU: Unsupported arch: ${YALDA_ARCH}"
         ;;
     esac
+    qemu_bin+=" -smp $CONFIG_YALDA_QEMU_CPUS"
     # xargs trim whitespaces from resulting string, example:
     # "i386 " -> "i386"
     qemu_system_arch=$(echo $qemu_bin | cut -d '-' -f3 | xargs)
@@ -104,7 +105,10 @@ function do_build
             log_info "Get qemu base device tree"
             eval $qemu_bin -machine dumpdtb="$YALDA_WORKDIR/qemu.dtb"
             log_info "Merge base device tree with $YALDA_WORKDIR/$CONFIG_YALDA_QEMU_DTB_PATH"
-            cat  <(dtc -I dtb "$YALDA_WORKDIR/qemu.dtb") <(dtc -I dts -O dts "$YALDA_WORKDIR/$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | dtc - -o "$YALDA_WORKDIR/merged.dtb"
+            DTC="$YALDA_KERNEL_BUILD_DIR/scripts/dtc/dtc"
+            #case for the host usage. then use host dtc
+            [ -x ${DTC} ] || DTC="dtc"
+            cat  <(${DTC} -I dtb "$YALDA_WORKDIR/qemu.dtb") <(${DTC} -I dts -O dts "$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | ${DTC} - -o "$YALDA_WORKDIR/merged.dtb"
         fi
     fi
 }
