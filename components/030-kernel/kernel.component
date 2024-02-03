@@ -74,6 +74,11 @@ function do_build
                 else
                     make $CONFIG_YALDA_KERNEL_BASE_CONFIG O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
                 fi
+
+                if [ "$CONFIG_YALDA_KERNEL_MODULES2YES" == "y" ]; then
+                    make mod2yesconfig O="$YALDA_KERNEL_BUILD_DIR" >/dev/null
+                fi
+
                 local yalda_config="$(realpath $(dirname $BASH_SOURCE))/yalda.config"
                 ./scripts/kconfig/merge_config.sh -m -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "${YALDA_ROOT_DIR}/build/arch/${ARCH}/kernel.config"> $YALDA_KERNEL_BUILD_DIR/merge1.log
                 ./scripts/kconfig/merge_config.sh -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config"> $YALDA_KERNEL_BUILD_DIR/merge2.log
@@ -81,18 +86,8 @@ function do_build
                 [ -n "$conf_diff" ] && log_warning "Not all YALDA configs have been applied: \n$conf_diff"
             fi
 #todo replace O= with KBUILD_OUTPUT or like that
-#BUG: need another way how to select output image or use uncompressed image everywhere
-#            if [[ "$ARCH" == arm64 ]]; then
-#                make Image.gz -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-#            elif [[ "$ARCH" == riscv ]]; then 
-#                make Image -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-#            else
-#                make bzImage -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-#            fi
             make all -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
-
             make modules_prepare O="$YALDA_KERNEL_BUILD_DIR"
-#            make modules -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
             make modules_install INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" O="$YALDA_KERNEL_BUILD_DIR"
             make scripts_gdb -j$(nproc) O="$YALDA_KERNEL_BUILD_DIR"
 
@@ -100,6 +95,7 @@ function do_build
                 make dtbs O="$YALDA_KERNEL_BUILD_DIR"
             fi
 
+#BUG: need another way how to select output image or use uncompressed image everywhere
             local kernel_path=$(make -s image_name O="$YALDA_KERNEL_BUILD_DIR")
             ln -sf "$YALDA_KERNEL_BUILD_DIR/$kernel_path" "$YALDA_WORKDIR/kernel.image"
         else

@@ -103,6 +103,9 @@ config YALDA_KERNEL_SOURCE_DIR
 config YALDA_KERNEL_BUILD_DIR
   string "Build workdir"
   default "build/kernel"
+  help
+    Only first time or after the cleaning configs are applied. Change this dir to another one will lead to new clean build
+    and you can have several build versions for the project
 
 config YALDA_KERNEL_ADDITIONAL_CONFIG
   bool "Additional kernel config overlay"
@@ -117,6 +120,13 @@ config YALDA_KERNEL_CONFIG_PATH
   default ""
   help
     Custom config path. It is overlay to YALDA's config.
+
+config YALDA_KERNEL_MODULES2YES
+  bool "Force modules to built-in"
+  default n
+  help
+    Custom configs often include huge amount of additional modules that may lead to big rootfs and it may not load
+    This option change M to Y in base config when it is possible
 
 config YALDA_KERNEL_PATCH
   bool "Apply YALDA patches"
