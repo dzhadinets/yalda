@@ -7,7 +7,7 @@ function do_init
     YALDA_MODULES_UDD_SRC_DIR="$YALDA_WORKDIR/udd/"
     YALDA_MODULES_UDD_GIT_URL="git@gitlab.com:dzhadinets/usb-debug-dongle.git"
 
-    component_list=()
+    component_list=("test_module")
 
     if [ "$CONFIG_YALDA_BUILD_SIMPLE_INITRD" == "y" ]; then
         component_list+=("simple_initrd")
@@ -18,7 +18,7 @@ function do_init
     fi
 
     if [ "$CONFIG_YALDA_BUILD_EXAMPLE_APPLAICTION" == "y" ]; then
-        component_list+=("test_application")
+        component_list+=("mydebug_application")
     fi
 
     if [ "$CONFIG_YALDA_BUILD_DEMO_MODULE" == "y" ]; then
@@ -40,7 +40,7 @@ function do_build
         log_info "build for $comp_name"
         mkdir -p "$YALDA_MODULES_BUILD_DIR/$comp_name"
         pushd "${YALDA_MODULES_DIR}/$comp_name" >/dev/null
-        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/$comp_name" KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" make $@
+        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/$comp_name" KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" make "$@"
         popd >/dev/null
     done
 
@@ -48,7 +48,7 @@ function do_build
         log_info "build for UDD"
         mkdir -p "$YALDA_MODULES_BUILD_DIR/udd"
         pushd "${YALDA_MODULES_UDD_SRC_DIR}/kernel_module" >/dev/null
-        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/udd" KERNEL_DIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR"  make $@
+        BUILD_DIR="${YALDA_MODULES_BUILD_DIR}/udd" KERNEL_DIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR"  make "$@"
         popd >/dev/null
     fi
 }
