@@ -145,5 +145,3 @@ int mydebug_module_cdev_release(void)
 	pr_info("Device Driver Remove...Done!!!\n");
 	return 0;
 }
-
-

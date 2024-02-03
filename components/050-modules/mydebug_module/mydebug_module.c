@@ -66,7 +66,7 @@ static int mydebug_module_parse_param(const char *str, u64 *result)
 	size_t len = strlen(str);
 	*result = 0;
 
-#if 1
+#ifndef MAKE_THE_BUG
 	while (len > 0 && str[len - 1] == '\n') {
 		len--;
 	}
