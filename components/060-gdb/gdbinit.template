@@ -1,5 +1,7 @@
-# for tui mode it disables annoing paging
-set pagination off
+
+set breakpoint pending on
+# enable kernel scripts autoload
+set auto-load safe-path .
 
 # connect to YALDA
 target remote ${REMOTE_TARGET}
@@ -11,6 +13,7 @@ set pagination off
 set scheduler-locking on
 
 b start_kernel
+b panic
 
 # adds temporary breakpoint on module init/exit functions
 b do_init_module
@@ -21,4 +24,3 @@ silent
     tb *mod->exit
     c
 end
-c

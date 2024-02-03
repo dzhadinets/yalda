@@ -20,8 +20,10 @@ function gdb_launch
     if [ "$CONFIG_YALDA_FROM_HOST" == "y" ];then
         log_error "Host kernel debug is not implemented yet"
     else
-        if [ "$1" == "--launch" ];then
-            local REMOTE_TARGET=" | exec sq-yalda --silent run qemu --gdb stdio"
+        # launch gdb and qemu in a single call. Idea is for integration with IDEs. TBD
+        if [ "$1" == "--with_run" ];then
+            make_gdb_init
+            local REMOTE_TARGET=" | exec $YALDA_ROOT_DIR/bin/yalda --silent run qemu --gdb stdio"
             export THIS_DIR REMOTE_TARGET
             envsubst < "$YALDA_ROOT_DIR/components/gdb/gdbinit_S.template"> "$YALDA_WORKDIR/gdbinit"
             trap "rm -f \"$YALDA_WORKDIR/gdbinit\"" EXIT
@@ -29,18 +31,25 @@ function gdb_launch
             [ -f "$YALDA_WORKDIR/gdbinit" ] || log_error "Launch YALDA first"
         fi
 
-        gdb_param="${YALDA_KERNEL_BUILD_DIR}/vmlinux"
-#        gdb_param+=" -iex \"set auto-load safe-path .\""
-        gdb_params+=${CONFIG_YALDA_GDB_PARAMETERS}
-        gdb_param+=" -x ${YALDA_WORKDIR}/gdbinit"
-        if [ "$CONFIG_YALDA_GDB_FROM_IDE" == "y" ]; then
-            gdb_param+=" -i=mi2"
+        gdb_params="${YALDA_KERNEL_BUILD_DIR}/vmlinux"
+        gdb_params+=" ${CONFIG_YALDA_GDB_PARAMETERS}"
+        gdb_params+=" -x ${YALDA_WORKDIR}/gdbinit"
+
+        if [ -n "$CONFIG_YALDA_GDB_EXTRAINIT" ];then
+            if [ -r "$CONFIG_YALDA_GDB_EXTRAINIT" ]; then
+                gdb_params+=" -ix $CONFIG_YALDA_GDB_EXTRAINIT"
+            else
+                log_warning "Extra GDB init not found $CONFIG_YALDA_GDB_EXTRAINIT"
+            fi
         fi
-        log_info $gdb_param
+        if [ "$CONFIG_YALDA_GDB_FROM_IDE" == "y" ]; then
+            gdb_params+=" -i=mi2"
+        fi
+        log_info "GDB Params:$gdb_params"
         if [ "$CONFIG_YALDA_GDB_FROM_TOOLCHAIN" == "y" ]; then
-            eval ${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}gdb ${gdb_param}
+            eval ${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}gdb ${gdb_params}
         else
-            gdb-multiarch $gdb_param
+            eval gdb-multiarch ${gdb_params}
         fi
     fi
 }
