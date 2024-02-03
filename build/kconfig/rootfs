@@ -5,4 +5,10 @@ config YALDA_ROOTFS_ADDONS
   help
     Path to addons to rootfs with configs, binaries etc
 
+config YALDA_ROOTFS_COREDUMPS
+  bool "Enable core dumps for applications"
+  default n
+  help
+    It creates /.init_core_dumps file
+
 endmenu

@@ -7,24 +7,28 @@ function do_init
 
 function do_sync
 {
-    log_info "Root filesystem is build-in"
-    cp -ruT "$YALDA_ROOTFS_SOURCE_DIR" "$YALDA_OUTPUT_DIR"
-    pushd "$YALDA_OUTPUT_DIR" >/dev/null
-    mkdir -pv {home,dev,proc,mnt/share,sys,tmp} > /dev/null
-    popd >/dev/null
+    log_info "Root filesystem is build-in. No need to sync."
 }
 
 function do_build
 {
     log_info "Update copy of RootFS"
+    cp -rT "$YALDA_ROOTFS_SOURCE_DIR" "$YALDA_OUTPUT_DIR"
+    pushd "$YALDA_OUTPUT_DIR" >/dev/null
+    mkdir -pv {home,dev,proc,mnt/share,sys,tmp} > /dev/null
+    popd >/dev/null
     if [ -n "$CONFIG_YALDA_ROOTFS_ADDONS" ];then
         log_info "Install addons of RootFS from $YALDA_WORKDIR/$CONFIG_YALDA_ROOTFS_ADDONS"
-        cp -ruT "$YALDA_ROOTFS_SOURCE_DIR" "$YALDA_OUTPUT_DIR"
-        cp -ruT "$YALDA_WORKDIR/$CONFIG_YALDA_ROOTFS_ADDONS" "$YALDA_OUTPUT_DIR"
+        cp -rT "$YALDA_ROOTFS_SOURCE_DIR" "$YALDA_OUTPUT_DIR"
+        cp -rT "$CONFIG_YALDA_ROOTFS_ADDONS" "$YALDA_OUTPUT_DIR"
+    fi
+    if [ "$CONFIG_YALDA_ROOTFS_COREDUMPS" == "y" ];then
+        touch "$YALDA_OUTPUT_DIR/.init_enable_core"
     fi
 }
 
 function do_clean
 {
+    log_info "Clean output dir $YALDA_OUTPUT_DIR"
     rm -rf "$YALDA_OUTPUT_DIR"
 }
