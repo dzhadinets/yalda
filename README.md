@@ -126,10 +126,10 @@ Moreover it prepares toolchain and platform environment for your project
 So you can design you makefile such way to add as much targets as you need.
 Basic skeleton for new module could be following
 ```
-├── Makefile
-└── module
-    ├── hello.c
-    └── Makefile
+├─ Makefile
+└─ module
+   ├─ hello.c
+   └─ Makefile
 ```
 Makefile
 ```make
@@ -258,6 +258,12 @@ Here are stories of demo build/debug sessions about:
 - TBD: [UDD](story_udd.md) - debugging of [Universal debug dongle]()
 - TBD: [IDE integration](story_ide.md) - debugging using Emacs and VScode
 
+## Alternatives
+- [Buildroot approach](https://bootlin.com/doc/training/buildroot/buildroot-agenda.pdf)
+- [Yocto approach](https://docs.yoctoproject.org/kernel-dev/index.html)
+- [PetaLinux](https://www.xilinx.com/products/design-tools/embedded-software/petalinux-sdk.html) - I found this great set of tools too late. It can do the same and even more.
+  But it is much bigger and has a bit another goal. And this is the problem. Therefore YALDA :)
+
 ## Known issues
 - Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
 - UDD module does not links to stable build. have a fun
@@ -269,3 +275,15 @@ Here are stories of demo build/debug sessions about:
 - ci loop does not work
 - I decided to move from base kernel tinyconfig to defconfig. Image is bigger but it is much easear adding new architectures.
   But yalda.config and arch configs are dirty now
+
+## TODO/Radmap
+- check and tune all log levels in messages
+- add/fix/remove log messages
+- add a common mechanism for a sequence of bootloaders
+- reimplement dependency checker
+- reimplement tests (console reader to libvirt)
+- implement test module for autimatic testing of ability to debug of the config
+- reimplement ci
+- write stories
+- add changelog gnerator
+- create stable simgle bootloader configuration

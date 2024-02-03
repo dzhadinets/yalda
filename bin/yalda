@@ -2,41 +2,6 @@
 
 set -e
 
-########################################### help case
-function call_help
-{
-    # Commands and parameters list are used by bash completition
-    # See ../scripts/completion.bash for more info
-    echo "Usage: $(basename $0) [COMMAND] ..."
-    echo "Common launching arguments:"
-    echo "  -h|--help                          	- gets this help"
-    echo "  -s|--silent                        	- do not print YALDA logs except errors"
-    echo "  -V|--verbose                       	- print verbosed commands output"
-    echo "  -c|--cpu=<AMOUNT>                  	- limit cpus"
-    echo "The following are valid commands:"
-    echo "  sync  [<components>]               	- sync sources and check it is up to date"
-    echo "  build [<components>|<build_params>]	- build curent dir for YALDA"
-    echo "  config [<components>]              	- without params runs YALDA configuration"
-    echo "  run <run_params>                   	- launch YALDA"
-    echo "  clean [<components>|<build_params>]	- clean YALDA in the curent dir"
-    echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
-    echo "  ci                                 	- Build and test all predefined configs"
-    echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
-    echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
-    echo "                                     	- else adds \"scenario\" into predefined list of scenarion"
-    echo "  <components>                       	- components:"
-    find ../components/ -name "*.component" -print0 | sort -z | xargs -0 -n1 basename -s .component | xargs -n1 echo "  "
-    echo "  <build_params>                     	- pass additional arguments to build component (ie to 'make' command)"
-    echo "    --all                            	- build all Yalda component"
-    echo "    --initrd                         	- build initrd"
-    echo "    --component                      	- build specified component"
-    echo "    <target>                         	- run Makefile in  current folder with parametr \"target\" (field my be clear)"
-    echo "  <run_params>                       	- YALDA launch parameters"
-    echo "    --gui                            	- launch QEMU with SDL"
-    echo "    --gdb <gdb_out>                  	- launch gdbserver with output to gdbout (default: tcp::1234)"
-    echo "    -S                               	- QEMU will not start until gdb connected"
-}
-
 ######################################### base preparation
 YALDA_LOG_SILENT=false
 YALDA_LOG_VERBOSE=false
@@ -45,21 +10,6 @@ YALDA_ROOT_DIR=$(realpath $(dirname $BASH_SOURCE)/../)
 YALDA_COMPONENT_EXT=".component"
 THIS_DIR=$PWD
 
-# if this dir contain dir .yalda then assume there is config inside it
-# or if we are going to launch 'config' here
-# else use comon workdir inside YALDA_ROOT_DIR
-if [ -d "$THIS_DIR/.yalda" ] || [ "$1" == "config" ];then
-    YALDA_WORKDIR=$THIS_DIR/.yalda
-else
-    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
-fi
-
-
-#if [[ $THIS_DIR =~ ^$YALDA_ROOT_DIR ]]; then
-#    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
-#else
-#    YALDA_WORKDIR=$THIS_DIR/.yalda
-#fi
 
 ########################################### help case
 function call_help
@@ -74,12 +24,13 @@ function call_help
     echo "  -c|--cpu=<AMOUNT>                  	- limit cpus"
     echo "The following are valid commands:"
     echo "  sync  [<components>]               	- sync sources and check it is up to date"
-    echo "  build [<components>|--initrd]      	- build everithing or specific component or init ram disk"
+    echo "  build [<components>|--initrd]      	- build everithing with initrd or specific component"
+    echo "  initrd                             	- build init ram disk"
     echo "  config [<components>]              	- without params runs YALDA configuration"
     echo "  run <run_params>                   	- launch YALDA"
     echo "  clean [<components>]               	- clean YALDA in the curent dir"
-    echo "  debug [--ide] [<PATH>]             	- launches gdb and connects to YALDA"
-    echo "  code-format                        	- Reformat your code recusevely using Kernel .clang-format file"
+    echo "  debug [--with_run] [<PATH>]        	- launches gdb and connects to YALDA (--with_run is TBD)"
+    echo "  code-format [<PATH>]               	- Reformat your code recusevely using Kernel .clang-format file"
     echo "  ci                                 	- Build and test all predefined configs"
     echo "  test [-s] [scenario]               	- launch test scenario(s) for this dir configuration within YALDA dir"
     echo "                                     	- if has flag \"-s\" launch single \"scenario\" "
@@ -216,6 +167,23 @@ done
 #fi
 
 shift $((OPTIND-1)) # remove parsed options and args from $@ list
+
+# if this dir contain dir .yalda then assume there is config inside it
+# or if we are going to launch 'config' here
+# else use comon workdir inside YALDA_ROOT_DIR
+if [ -d "$THIS_DIR/.yalda" ] || [ "$1" == "config" ];then
+    YALDA_WORKDIR=$THIS_DIR/.yalda
+else
+    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
+fi
+
+# This is how to work with examples within yalda . If uncommet then all internals of yalda will utilize common workdir
+# right now it treat any dir as root and may create own environment in any dir. Was usefull for YALDA debug itself
+#if [[ $THIS_DIR =~ ^$YALDA_ROOT_DIR ]]; then
+#    YALDA_WORKDIR=$YALDA_ROOT_DIR/.yalda
+#else
+#    YALDA_WORKDIR=$THIS_DIR/.yalda
+#fi
 
 log_info "Workdir: $YALDA_WORKDIR"
 do_log mkdir -p "$YALDA_WORKDIR"
