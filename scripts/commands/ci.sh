@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SQ_YALDA_BIN=${YALDA_ROOT_DIR}/bin/sq-yalda
+YALDA_BIN=${YALDA_ROOT_DIR}/bin/yalda
 YALDA_CMD_TEST_DIR=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 YALDA_TEST_CONFIG_DIR=${YALDA_CMD_TEST_DIR}/../components/tests/config
 
@@ -104,7 +104,7 @@ for config_name in ${config_list[@]}; do
         if [ $retcode != 0 ];then
             break
         fi
-        $SQ_YALDA_BIN sync ${component_name}
+        $YALDA_BIN sync ${component_name}
         retcode=$?
         save_test_result ${YALDA_TEST_CONFIG_RESULT_DIR}/result.txt "${component_name} sync" $retcode
     done
@@ -114,20 +114,20 @@ for config_name in ${config_list[@]}; do
         if [ $retcode != 0 ];then
             break
         fi
-        $SQ_YALDA_BIN build ${component_name}
+        $YALDA_BIN build ${component_name}
         retcode=$?
         # if build is done save component name in file
         save_test_result ${YALDA_TEST_CONFIG_RESULT_DIR}/result.txt "${component_name} build" $retcode
     done
     if [ $retcode == 0 ];then
-        $SQ_YALDA_BIN build --initrd
+        $YALDA_BIN initrd
         retcode=$?
         save_test_result ${YALDA_TEST_CONFIG_RESULT_DIR}/result.txt "initrd build" $retcode
     fi
 
     # add additional steps if its needed
     if [ $retcode == 0 ];then
-        $SQ_YALDA_BIN test
+        $YALDA_BIN test
         retcode=$?
         save_test_result ${YALDA_TEST_CONFIG_RESULT_DIR}/result.txt "run test" $retcode
     fi

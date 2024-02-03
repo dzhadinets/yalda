@@ -18,7 +18,7 @@ case "$1" in
 esac
 done
 
-params="$YALDA_ROOT_DIR/bin/sq-yalda --silent run"
+params="$YALDA_ROOT_DIR/bin/yalda --silent run"
 scenarios=""
 
 if [ $single == false ]; then
