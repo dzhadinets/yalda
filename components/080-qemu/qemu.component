@@ -108,7 +108,8 @@ function do_build
             DTC="$YALDA_KERNEL_BUILD_DIR/scripts/dtc/dtc"
             #case for the host usage. then use host dtc
             [ -x ${DTC} ] || DTC="dtc"
-            cat  <(${DTC} -I dtb "$YALDA_WORKDIR/qemu.dtb") <(${DTC} -I dts -O dts "$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | ${DTC} - -o "$YALDA_WORKDIR/merged.dtb"
+            cat  <(${DTC} -I dtb "$YALDA_WORKDIR/qemu.dtb") <(${DTC} -O dts "$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | ${DTC} -Wno-clocks_property -Wno-gpios_property - -o "$YALDA_WORKDIR/merged.dtb"
+#            cat  <(${DTC} -@ -I dtb "$YALDA_WORKDIR/qemu.dtb") <(${DTC} -@ -O dts "$CONFIG_YALDA_QEMU_DTB_PATH" | grep -v /dts-v1/) | ${DTC} - -@ -O dts -o "$YALDA_WORKDIR/preview.dts" 1>&2 2>/dev/null
         fi
     fi
 }
@@ -190,7 +191,7 @@ function qemu_launch
 
     if [ "$CONFIG_YALDA_QEMU_USB" == "y" ];then
         params+=" -device qemu-xhci,id=xhci"
-        params+=" -device usb-host,vendorid=0x1a86" #china debug dongle
+        params+=" -device usb-host,vendorid=0x1a86,productid=0x5512" #china debug dongle
         params+=" -device usb-host,vendorid=0x04b4" #softeq debug dongle
         if [ -n "$CONFIG_YALDA_QEMU_USB_VIDPID" ];then
             params+=" -device usb-host,$CONFIG_YALDA_QEMU_USB_VIDPID" #china debug dongle
