@@ -33,7 +33,7 @@ function gdb_launch
 
         gdb_params="${YALDA_KERNEL_BUILD_DIR}/vmlinux"
         gdb_params+=" ${CONFIG_YALDA_GDB_PARAMETERS}"
-        gdb_params+=" -x ${YALDA_WORKDIR}/gdbinit"
+        gdb_params+=" -ix ${YALDA_WORKDIR}/gdbinit -iex 'set auto-load safe-path /'"
 
         if [ -n "$CONFIG_YALDA_GDB_EXTRAINIT" ];then
             if [ -r "$CONFIG_YALDA_GDB_EXTRAINIT" ]; then

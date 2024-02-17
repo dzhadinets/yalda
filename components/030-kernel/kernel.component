@@ -83,7 +83,10 @@ function do_build
                 ./scripts/kconfig/merge_config.sh -m -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "${YALDA_ROOT_DIR}/build/arch/${ARCH}/kernel.config"> $YALDA_KERNEL_BUILD_DIR/merge1.log
                 ./scripts/kconfig/merge_config.sh -O "$YALDA_KERNEL_BUILD_DIR" "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config"> $YALDA_KERNEL_BUILD_DIR/merge2.log
                 local conf_diff="`./scripts/diffconfig "$YALDA_KERNEL_BUILD_DIR/.config" "$yalda_config" | grep "+"`"
-                [ -n "$conf_diff" ] && log_warning "Not all YALDA configs have been applied: \n$conf_diff"
+                if [ -n "$conf_diff" ]; then
+                    log_warning "Not all YALDA configs have been applied:"
+                    log_warning "$conf_diff"
+                fi
             fi
 #todo replace O= with KBUILD_OUTPUT or like that
             make all -j$YALDA_NPROC O="$YALDA_KERNEL_BUILD_DIR"
@@ -93,6 +96,8 @@ function do_build
 
             if [[ ! "$ARCH" =~ ^x86 ]]; then
                 make dtbs O="$YALDA_KERNEL_BUILD_DIR"
+                install -d "$YALDA_OUTPUT_DIR/usr/bin"
+                install "$YALDA_KERNEL_BUILD_DIR/scripts/dtc/fdtoverlay" "$YALDA_OUTPUT_DIR/usr/bin"
             fi
 
 #BUG: need another way how to select output image or use uncompressed image everywhere

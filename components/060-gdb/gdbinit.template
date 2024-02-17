@@ -1,13 +1,12 @@
 
+set debuginfod enabled off
 set breakpoint pending on
-# enable kernel scripts autoload
-set auto-load safe-path .
 
 # connect to YALDA
 target remote ${REMOTE_TARGET}
 
 # Do not require continue key when screen is filled with logs
-set pagination off
+# set pagination off
 
 # in most cases we need to debug single thread
 set scheduler-locking on
