@@ -270,23 +270,24 @@ if [ -r "$CONFIG_PATH" ];then
     YALDA_UBOOT_BUILD_DIR="$YALDA_WORKDIR/$CONFIG_YALDA_UBOOT_BUILD_DIR"
     do_log mkdir -p "$YALDA_UBOOT_BUILD_DIR"
 ##########  Components initialization
-YALDA_COMMAND=$1
 
-for component in ${YALDA_COMPONENTS_ORDER[@]}; do
-    log_dbg "Init component $component"
+    for component in ${YALDA_COMPONENTS_ORDER[@]}; do
+        log_dbg "Init component $component"
+        unset -f do_init
+        source ${YALDA_COMPONENTS[$component]}
+        do_init
+    done
     unset -f do_init
-    source ${YALDA_COMPONENTS[$component]}
-    do_init
-done
-unset -f do_init
-unset -f do_sync
-unset -f do_build
-unset -f do_launch
-unset -f do_clean
+    unset -f do_sync
+    unset -f do_build
+    unset -f do_launch
+    unset -f do_clean
 
 elif [ "$1" != "config" ];then
     log_error "launch $(basename $0) config first in $(cd $YALDA_WORKDIR/.. && pwd) to create at least default configuration"
 fi
+
+YALDA_COMMAND=$1
 
 ##########  Sanity check of dependencies
 #source ${YALDA_ROOT_DIR}/scripts/deps-check.sh ${YALDA_ROOT_DIR}/dependencies.txt

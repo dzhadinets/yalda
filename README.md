@@ -287,3 +287,9 @@ Here are stories of demo build/debug sessions about:
 - write stories
 - add changelog gnerator
 - create stable simgle bootloader configuration
+
+## To read
+- https://events.static.linuxfound.org/sites/events/files/slides/Debugging%20the%20Linux%20Kernel%20with%20GDB.pdf
+- https://github.com/cirosantilli/linux-kernel-module-cheat/tree/master?tab=readme-ov-file#gdb
+- https://stackoverflow.com/questions/9561546/thread-aware-gdb-for-the-linux-kernel
+- https://wiki.st.com/stm32mpu/wiki/Debugging_the_Linux_kernel_using_the_GDB
