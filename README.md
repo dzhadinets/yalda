@@ -293,3 +293,8 @@ Here are stories of demo build/debug sessions about:
 - https://github.com/cirosantilli/linux-kernel-module-cheat/tree/master?tab=readme-ov-file#gdb
 - https://stackoverflow.com/questions/9561546/thread-aware-gdb-for-the-linux-kernel
 - https://wiki.st.com/stm32mpu/wiki/Debugging_the_Linux_kernel_using_the_GDB
+- https://github.com/Johannes4Linux/Linux_Driver_Tutorial
+
+## Support
+If you want to support me, just buy a coffe
+https://www.buymeacoffee.com/dzhadinets

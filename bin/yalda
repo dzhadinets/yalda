@@ -301,6 +301,13 @@ if ! ${ESCAPE_CMD} && [ -n "$YALDA_COMMAND" ] && [ -x "${YALDA_ROOT_DIR}/scripts
     shift
     source ${YALDA_ROOT_DIR}/scripts/commands/$YALDA_COMMAND.sh
 else
-    log_info "Start building in $THIS_DIR for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion) from $YALDA_KERNEL_BUILD_DIR"
-    make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" $@
+    log_info "Start building in $THIS_DIR"
+    log_info " for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion)"
+    log_info " from $YALDA_KERNEL_BUILD_DIR"
+    if [ "$YALDA_COMMAND" == "--module" ]; then
+        make -C $YALDA_KERNEL_BUILD_DIR M=$(realpath $2) modules
+    else
+        ${YALDA_KERNEL_SOURCE_DIR}/scripts/clang-tools/gen_compile_commands.py
+        make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" $@
+    fi
 fi

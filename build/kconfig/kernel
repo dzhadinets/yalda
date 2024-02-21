@@ -122,7 +122,7 @@ config YALDA_KERNEL_CONFIG_PATH
     Custom config path. It is overlay to YALDA's config.
 
 config YALDA_KERNEL_MODULES2YES
-  bool "Force modules to built-in"
+  bool "Force modules to be built-in"
   default n
   help
     Custom configs often include huge amount of additional modules that may lead to big rootfs and it may not load
