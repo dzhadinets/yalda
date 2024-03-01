@@ -16,8 +16,4 @@ config YALDA_GDB_EXTRAINIT
   help
     GDB script for your project ie list of stored breakpoints
 
-config YALDA_GDB_FROM_IDE
-  bool "Enable interactive mode for IDE integration"
-  default n
-
 endmenu

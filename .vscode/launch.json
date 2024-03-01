@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug YALDA",
+            "type": "cppdbg",
+            "request": "launch",
+            // NOTE: Probably it will be better to use *.ko file or allow to select
+            "program": "${workspaceFolder}/.yalda/build/kernel/vmlinux",
+            "cwd": "${workspaceFolder}",
+            "externalConsole": true,
+            "pipeTransport": {
+                "debuggerPath": "debug",
+                "pipeProgram": "yalda",
+                "pipeArgs": [
+                    "--silent"
+                ],
+                "pipeCwd": "${workspaceFolder}",
+                "quoteArgs": false
+            },
+            "stopAtConnect": false,
+            "preLaunchTask": "Build",
+            "MIMode": "gdb",
+            "customLaunchSetupCommands": [],
+            /*"logging": {
+                "trace": true,
+                "engineLogging": true
+            },*/
+        }
+    ]
+}

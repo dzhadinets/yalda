@@ -192,7 +192,12 @@ function qemu_launch
     if [ "$CONFIG_YALDA_QEMU_USB" == "y" ];then
         params+=" -device qemu-xhci,id=xhci"
         params+=" -device usb-host,vendorid=0x1a86,productid=0x5512" #china debug dongle
-        params+=" -device usb-host,vendorid=0x04b4" #softeq debug dongle
+        params+=" -device usb-host,vendorid=0x04b4,productid=0x0005"
+        params+=" -device usb-host,vendorid=0x04b4,productid=0x0007"
+        params+=" -device usb-host,vendorid=0x04b4,productid=0x0009"
+        params+=" -device usb-host,vendorid=0x04b4,productid=0x000a"
+        params+=" -device usb-host,vendorid=0x04b4,productid=0x00ff"
+
         if [ -n "$CONFIG_YALDA_QEMU_USB_VIDPID" ];then
             params+=" -device usb-host,$CONFIG_YALDA_QEMU_USB_VIDPID" #china debug dongle
         fi

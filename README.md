@@ -61,7 +61,7 @@ of the kernel and tools.
 Moreover it additionally prepares bootloader and simplified rootfs to be launched with your code in isolated environment
 So you need to configure YALDA first.
 
-## Quick start
+## <a name="start"></a>Quick start
 In YALDA's root directory
 - call `make all`
 - launch `bin/yalda run -S`
@@ -209,8 +209,8 @@ and will wait till the debugger will be connected. You will have a breakstop on 
 Then you can add more breakpoint you need and walk through all internals of the greatest OS
 ![RICS-V debug](images/debug.gif "YALDA debug")
 
-### IDE intergration
-You need to enable it in the YALDA's config and tune commandline parameters (at least remove `--tui`).
+### <a name="ide-integration"></a>IDE intergration
+You need to tune commandline parameters (at least remove `--tui`).
 Use command like to prevent conflicts with YALDA's logs
 ```bash
 yalda --silent debug
@@ -263,6 +263,7 @@ Here are stories of demo build/debug sessions about:
 - [Yocto approach](https://docs.yoctoproject.org/kernel-dev/index.html)
 - [PetaLinux](https://www.xilinx.com/products/design-tools/embedded-software/petalinux-sdk.html) - I found this great set of tools too late. It can do the same and even more.
   But it is much bigger and has a bit another goal. And this is the problem. Therefore YALDA :)
+- [Virtme](https://git.kernel.org/pub/scm/utils/kernel/virtme/virtme.git/tree/README.md)
 
 ## Known issues
 - Dependencies are not checked correctly(disabled now) and it leads to errors. will be reimplemented
@@ -287,6 +288,7 @@ Here are stories of demo build/debug sessions about:
 - write stories
 - add changelog gnerator
 - create stable simgle bootloader configuration
+- automatically check and perform messed steps of YALDA preparation/build
 
 ## To read
 - https://events.static.linuxfound.org/sites/events/files/slides/Debugging%20the%20Linux%20Kernel%20with%20GDB.pdf

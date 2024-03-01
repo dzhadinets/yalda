@@ -31,7 +31,7 @@ function gdb_launch
             [ -f "$YALDA_WORKDIR/gdbinit" ] || log_error "Launch YALDA first"
         fi
 
-        gdb_params="${YALDA_KERNEL_BUILD_DIR}/vmlinux"
+        gdb_params="${YALDA_KERNEL_BUILD_DIR}/vmlinux -q"
         gdb_params+=" ${CONFIG_YALDA_GDB_PARAMETERS}"
         gdb_params+=" -ix ${YALDA_WORKDIR}/gdbinit -iex 'set auto-load safe-path /'"
 
@@ -42,9 +42,7 @@ function gdb_launch
                 log_warning "Extra GDB init not found $CONFIG_YALDA_GDB_EXTRAINIT"
             fi
         fi
-        if [ "$CONFIG_YALDA_GDB_FROM_IDE" == "y" ]; then
-            gdb_params+=" -i=mi2"
-        fi
+        gdb_params+=" $@"
         log_info "GDB Params:$gdb_params"
         if [ "$CONFIG_YALDA_GDB_FROM_TOOLCHAIN" == "y" ]; then
             eval ${CONFIG_YALDA_TOOLCHAIN_CROSS_PREFIX}gdb ${gdb_params}

@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/*.cmd": true,
+        "**/*.dtbo": true,
+        "**/*.ko": true,
+        "**/*.mod": true,
+        "**/*.mod.c": true,
+        "**/*.o": true,
+        "**/Module.symvers": true,
+        "**/modules.order": true
+    },
+    "editor.tabSize": 8,
+    "editor.insertSpaces": false,
+    "C_Cpp.autocomplete": "default",
+    "C_Cpp.default.cStandard": "c99",
+    "C_Cpp.default.includePath": [
+        "${workspaceRoot}/.yalda/kernel/include"
+    ],
+    "C_Cpp.clang_format_fallbackStyle": "clang-format",
+    "C_Cpp.clang_format_style": "file:${workspaceRoot}/.yalda/kernel/.clang-format",
+}

@@ -1,4 +1,3 @@
-
 set debuginfod enabled off
 set breakpoint pending on
 
@@ -11,7 +10,8 @@ target remote ${REMOTE_TARGET}
 # in most cases we need to debug single thread
 set scheduler-locking on
 
-b start_kernel
+#basic breakpoints (start_kernel does not work well(easy) for x86)
+#b start_kernel
 b panic
 
 # adds temporary breakpoint on module init/exit functions
