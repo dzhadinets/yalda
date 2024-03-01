@@ -101,7 +101,8 @@ function do_build
             fi
 
 #BUG: need another way how to select output image or use uncompressed image everywhere
-            local kernel_path=$(make -s image_name O="$YALDA_KERNEL_BUILD_DIR")
+            local kernel_path=$(make --silent image_name O="$YALDA_KERNEL_BUILD_DIR")
+            [ ! -f "$YALDA_KERNEL_BUILD_DIR/$kernel_path" ] && log_error "Bad kernel \"$YALDA_KERNEL_BUILD_DIR/$kernel_path\""
             ln -sf "$YALDA_KERNEL_BUILD_DIR/$kernel_path" "$YALDA_WORKDIR/kernel.image"
         else
             make O="$YALDA_KERNEL_BUILD_DIR" $@
