@@ -1,0 +1,4 @@
+# Patch enables debug symbols in .init* sections of kernel modules
+kernel_scripts_gdb.patch
+# scripts/gdb: Fix SB_* constants parsing
+fix_SB_constants_parsing.patch
