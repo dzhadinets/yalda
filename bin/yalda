@@ -79,9 +79,14 @@ function log_log
             false
         ;;
     esac
-    local COLS=$(tput cols)
-    local X=$((COLS - (${#TEXT} % COLS)))
-    printf "$FG$BG%s%*s$RST\n" "$TEXT" $X
+    if [ -N ${TERM} ];then
+        local COLS=$(tput cols)
+        [ $COLS -eq 0 ] && return
+        local X=$((COLS - (${#TEXT} % COLS)))
+        printf "$FG$BG%s%*s$RST\n" "$TEXT" $X
+    else
+        printf "%s\n" "$TEXT"
+    fi
 }
 
 function log_info
@@ -305,7 +310,9 @@ else
     log_info " for kernel $(make -s -C "$YALDA_KERNEL_BUILD_DIR" kernelversion)"
     log_info " from $YALDA_KERNEL_BUILD_DIR"
     if [ "$YALDA_COMMAND" == "--module" ]; then
-        make -C $YALDA_KERNEL_BUILD_DIR M=$(realpath $2) modules
+        MODULE_PATH=$2
+        shift 2
+        make -C $YALDA_KERNEL_BUILD_DIR M=$(realpath ${MODULE_PATH}) INSTALL_MOD_PATH="$YALDA_OUTPUT_DIR" modules $@
     else
         ${YALDA_KERNEL_SOURCE_DIR}/scripts/clang-tools/gen_compile_commands.py
         make -C $THIS_DIR KDIR="$YALDA_KERNEL_BUILD_DIR" INSTALL_PATH="$YALDA_OUTPUT_DIR" $@
