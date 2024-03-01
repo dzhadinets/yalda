@@ -2,7 +2,7 @@
 
 The main thing that YALDA does is automatically prepare an environment for development of specific kernel
 (version, toolchain, architecture, and config of the kernel) with ability to launch it and debug the kernel
-in the real time.
+in real time.
 
 [TOC]
 
@@ -10,11 +10,11 @@ in the real time.
 When you are in a brand new board bring-up it is usually required to develop or tune Linux kernel modules.
 The main issue is that to debug it on a remote environment it is required to setup specific set of hardware
 and software tools. The second point is when you are developing public user interface of the module you even do not
-need a hardware but specific architecture, toolchain, version of the kernel etc. YALDA helps to setup all inclsive 
+need a hardware, but specific architecture, toolchain, version of the kernel etc. YALDA helps to setup 'all inclsive'
 virtual environment where you can have a fun for the developing but not a configuration
 
 ## Prepare environment
-YALDA checks all required dependencies basing on the configuration of your build. YALDA utilizes KConfig approach
+YALDA checks all required dependencies basing on the configuration of your build. YALDA utilizes Kconfig approach
 of self configuration and as a front-end for the user
 
 Ubuntu:
@@ -55,27 +55,27 @@ YALDA simplify this call by calling
 ```bash
 $ yalda "$(ADDITIONAL_FLAGS)"
 ```
-It assumes the current dir as a root path to your modules. And takes into account the toolchain, version and config
-of the kernel architecture and many more which are configured for this particular project or uses YALDA's global set
+It considers the current dir as a root path to your modules. And takes into account the toolchain, version and config
+of the kernel architecture and many more, which are configured for this particular project or uses YALDA's global set
 of the kernel and tools.
 Moreover it additionally prepares bootloader and simplified rootfs to be launched with your code in isolated environment
 So you need to configure YALDA first.
 
-## <a name="start"></a>Quick start
+## Quick start
 In YALDA's root directory
 - call `make all`
 - launch `bin/yalda run -S`
 - run gdb `bin/yalda debug`
 
 ## Configure YALDA
-As was mentioned YALDA uses KConfig with ncurces front-end. So you will have fancy UI for doing all required configurations
+As was mentioned YALDA uses Kconfig with ncurces front-end. So you will have fancy UI for doing all required configurations
 Hope the structure and internal help of menu items are self explaining. Just call
 ```bash
 $ yalda config
 ```
 ![RICS-V configuration](images/config.gif "YALDA configuration")
 
-Finally it creates .yalda directory and generates config file there which is used to get and build all sources and prepares environment.
+Finally it creates .yalda directory and generates config file there, which is used to get and build all sources and prepares environment.
 In order to configure YALDA globally: call configuration inside YALDA's sources directory. The calling of the configuration in
 other places will create a local project config and an environment.
 The system consist of components and some of them may have own configuration, ie: kernel or busybox. You can call
@@ -87,7 +87,7 @@ $ yalda config kernel'
 ## Getting the sources
 Basing on your project or global YALDA's config the system will obtain sources of all components of the system.
 BTW it creates a cache of downloaded packages. So it will not do it againg if you have several projects in parallel
-The obtaining of sources ie synchronization of local and remote copy can done for all components in the system at once
+The obtaining of sources ie synchronization of local and remote copy can be done for all components in the system at once
 or separately
 ```bash
 $ yalda sync [<component name>]
@@ -113,9 +113,10 @@ $ yalda build kernel dtb
 YALDA uses init ram disk to launch the OS. So there is a final step you need to do if you are modifying
 rootfs (ie busybox parts or your additional layer of fs)
 ```bash
-$ yalda build --initrd
+$ yalda initrd
 ```
-the `tinyconfig` is used as the default config the kernel
+the `defconfig` is used as the default config the kernel but you can change it in by calling (configure)[#configure-yalda]
+Ie `tinyconfig` works great on most ARCHes and creates much faster environment
 
 ## Build your module
 As was mentioned YALDA simplifies complex call of building your module. Internally it calls
@@ -124,7 +125,7 @@ $ KDIR=<path to the kernel build> INSTALL_PATH=<path to rootfs>` make -C <your d
 ```
 Moreover it prepares toolchain and platform environment for your project
 So you can design you makefile such way to add as much targets as you need.
-Basic skeleton for new module could be following
+Basic skeleton for new module could be the following
 ```
 ├─ Makefile
 └─ module
@@ -170,7 +171,7 @@ void cleanup_module(void)
 MODULE_LICENSE("GPL");
 ```
 The same way you can add any other subdirectories.
-If you would like using same-dir makefile you can use combined makefile or kbuild
+If you would like using same-dir makefile you can use combined makefile or Kbuild
 https://docs.kernel.org/kbuild/makefiles.html
 ```make
 ifneq ($(KERNELRELEASE),)
@@ -205,16 +206,18 @@ To debug your out-of-tree module
 - enjoy
 
 To debug in-tree modules just launch YALDA with -S parameter. It will prevent starting of the kernel
-and will wait till the debugger will be connected. You will have a breakstop on start_kernel function.
+and will wait till the debugger will be connected. You will have a breakstop on before start_kernel function.
 Then you can add more breakpoint you need and walk through all internals of the greatest OS
 ![RICS-V debug](images/debug.gif "YALDA debug")
 
-### <a name="ide-integration"></a>IDE intergration
+### IDE intergration
 You need to tune commandline parameters (at least remove `--tui`).
-Use command like to prevent conflicts with YALDA's logs
+Use command like the following and silent mode to prevent conflicts with YALDA's logs
 ```bash
-yalda --silent debug
+yalda --silent debug --interpreter=mi
 ```
+GDB has a lot of [frontends](https://sourceware.org/gdb/wiki/GDB%20Front%20Ends) and can be itegrated with many UIs using [MI mode](https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI.html),
+see [the story](story_ide.md)
 
 ## QEMU
 YALDA uses QEMU as the system of virtualization. It is powerful and useful thing when you know how to use it
@@ -225,11 +228,15 @@ Most important key bindings:
   (qemu) help
   ```
 [QEMU Human Monitor Interface, Example Usage](https://web.archive.org/web/20180104171638/http://nairobi-embedded.org/qemu_monitor_console.html)
+But you can launch it with GUI too
+```bash
+yalda run --gui
+```
 
 ## Host kernel usage
 Also you can use the current host kernel: you need to select `CONFIG_YALDA_RUN_HOST_KERNEL`
-Please note that you will probable need root privileges to get your host kernel binary
-You will also need to install a kernel debug symbols package for your distribution.
+Please note that you will probably need root privileges to get your host kernel binary
+You will also need to install a kernel debug symbols packages for your distribution.
 
 ## Help
 The system is designed to be self-explaining. Call help
@@ -256,7 +263,7 @@ Here are stories of demo build/debug sessions about:
 - TBD: [Custom RISCV](story_riscv.md) - build and debug linux from scratch for Pine64 Ox64
 - TBD: [Host](story_host.md) - build and debug Demo module using host kernel
 - TBD: [UDD](story_udd.md) - debugging of [Universal debug dongle]()
-- TBD: [IDE integration](story_ide.md) - debugging using Emacs and VScode
+- [IDE integration](story_ide.md) - debugging using Emacs and VScode
 
 ## Alternatives
 - [Buildroot approach](https://bootlin.com/doc/training/buildroot/buildroot-agenda.pdf)
@@ -274,8 +281,6 @@ Here are stories of demo build/debug sessions about:
 - Stories need to be fixed
 - test does not work correctly
 - ci loop does not work
-- I decided to move from base kernel tinyconfig to defconfig. Image is bigger but it is much easear adding new architectures.
-  But yalda.config and arch configs are dirty now
 
 ## TODO/Radmap
 - check and tune all log levels in messages
@@ -300,3 +305,5 @@ Here are stories of demo build/debug sessions about:
 ## Support
 If you want to support me, just buy a coffe
 https://www.buymeacoffee.com/dzhadinets
+
+I will be happy to any contributions to the project. Just create tickets or merge requests

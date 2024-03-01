@@ -19,5 +19,5 @@ After this step YALDA is ready to be used to build and debug your module
 
 ![YALDA configuration](images/story_debug-session.gif)
 
-Finally when your module is done you need to compile the sources right on the device of recompile compete kernel with modules.
+Finally when your module is done you need to compile the sources right on the device or recompile compete kernel with modules.
 Use the guide above
